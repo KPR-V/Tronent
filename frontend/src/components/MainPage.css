@@ -30,74 +30,115 @@ html, body {
 
 .btn-connect-wallet {
   padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
+  background-color: transparent;
+  color:black;
+  font-weight: 600;
+  border: 2px solid black;
   border-radius: 8px;
   cursor: pointer;
 }
 
 .btn-connect-wallet:hover {
-  background-color: #0056b3;
+  background-color: black;
+  color: rgb(198, 127, 252);
+  scale: 1.05;
+  transition: 300ms;
 }
 
 /* Modal styles */
 /* Modal styles */
+/* Modal container */
 .modal {
+  display: block;
   position: fixed;
-  top: 0;
+  z-index: 9999;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7); /* Darkened backdrop */
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Dark background with opacity */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* Make sure this is higher than any other element */
 }
 
+/* Modal content with glassy effect */
 .modal-content {
-  background: white;
+  background-color: black;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  border-radius: 16px;
   padding: 2rem;
-  border-radius: 8px;
   width: 400px;
-  position: relative;
   text-align: center;
+  position: relative;
   z-index: 10000; /* Ensure the content itself is also on top */
+  color: white; /* Ensure all text is black */
 }
 
-
+/* Close button */
 .close-btn {
   position: absolute;
   top: 10px;
-  right: 10px;
+  right: 20px;
   font-size: 1.5rem;
   cursor: pointer;
+  color: (rgb(160, 52, 255)8, 2, 127); /* Make close button black */
 }
 
-.btn-upload {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
+/* Button styles */
+.btn-upload,
+.wallet-action-button {
+  
+  width: auto; /* Make the width of both buttons equal */
+  height: 2.5rem;
+  padding: 10px;
+  background-color: rgb(192, 97, 255);
+  color: black;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: 500;
 }
 
-.btn-upload:hover {
-  background-color: #218838;
+
+
+.btn-upload:hover,
+.wallet-action-button:hover {
+  background-color: rgb(175, 35, 251);
+  scale: 1.05;
+  transition: 300ms;
 }
 
+/* Button group for spacing and alignment */
+.button-group {
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center; /* Ensure both buttons are aligned properly */
+   /* Even spacing between buttons */
+}
+
+
+/* Loading spinner styling */
 .loading-spinner {
-  font-size: 18px;
-  color: #007bff;
-  margin-top: 20px;
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: black; /* Text is black */
 }
 
+/* Error message */
+.error-message {
+  color: red;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+/* Modal message (connection status) */
 .modal-message {
   margin-top: 20px;
-  color: green;
-  font-weight: bold;
+  color: rgb(17, 255, 84);
+  font-size: 1rem;
 }
+
 
