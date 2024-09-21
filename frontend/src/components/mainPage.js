@@ -9,7 +9,7 @@ import './MainPage.css'; // External CSS
 // Backend upload function
 async function upload() {
   try {
-    const response = await Axios.get('http://localhost:5001/upload');
+    const response = await Axios.get('http://localhost:4040/upload');
     if (response) {
       console.log(response.data);
       toast.success('File uploaded successfully.');
@@ -20,11 +20,18 @@ async function upload() {
   }
 }
 
+// sends wallet address from frontend to backend (getStarted button)
+
 const MainPage = () => {
   const { address, connected, connect, disconnect } = useWallet();
   const [isModalOpen, setModalOpen] = useState(false); // State for custom modal
   const [connectionStatus, setConnectionStatus] = useState(''); // Connection status
   const [loadingConnection, setLoadingConnection] = useState(false); // Show loading while connecting
+  async function sendingAddress(address) {
+    console.log(address)
+    const sendAddress =await Axios.post("http://localhost:4040/getAddress",{address})
+    console.log(sendAddress.data)
+  }
 
   // Function to open the modal
   const handleWalletClick = () => {
@@ -107,7 +114,7 @@ const MainPage = () => {
       {/* Button group with WalletActionButton and Backend button */}
       <div className="button-group">
         <WalletActionButton className="wallet-action-button" onClick={handleWalletConnect} />
-        <button className="btn-upload" onClick={upload}>Get Started!</button>
+        <button className="btn-upload" onClick={()=>{sendingAddress(`${address}`)}}>Get Started!</button>
       </div>
 
       {/* Display connection status */}
