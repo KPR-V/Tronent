@@ -1,75 +1,27 @@
-const express = require("express")
-const multer = require("multer");
+const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const FormData = require("form-data");
 const axios = require("axios");
-const crypto = require("crypto")
 const cors = require('cors');
+const computeFileHash = require('./utils/computeFileHash');
+const upload = require('./utils/multerConfig');
 
-
-
-
-const app =express()
+const app = express();
 app.use(cors());
-app.use(express.json());  
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-
-
 
 const BTFS_API_URL = "http://localhost:5001/api/v1";
 
-// multer part handleing the file uploading part
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "./uploads");
-  },
-  filename: function (req, file, cb) {
-    const fn =
-      crypto.randomBytes(12).toString("hex") + path.extname(file.originalname);
-    cb(null, fn);
-  },
+const fileVersions = {};
+const fileMapping = {};
+
+app.post('/getAddress', (req, res) => {
+  const walletAddress = req.body;
+  res.send("received wallet address");
+  console.log(walletAddress);
 });
-
-const upload = multer({ storage: storage });
-
-function computeFileHash(filePath) {
-  return new Promise((resolve, reject) => {
-    const hash = crypto.createHash("sha256");
-    const stream = fs.createReadStream(filePath);
-
-    stream.on("data", (data) => hash.update(data));
-    stream.on("end", () => resolve(hash.digest("hex")));
-    stream.on("error", (err) => reject(err));
-  });
-}
-
-// function btfsUpload(){
-//     console.log("upload")
-    
-//     // map of map , menu har user di har file de har version di cid pta lag jegi
-// }
-
-// app.get('/upload',(req,res)=>{
-    
-//     res.send( btfsUpload())
-//     res.redirect('/getData')
-//     // console.log(req)
-// })
-
-
-const fileVersions = {}; 
-const fileMapping = {}; 
-
-
-app.post('/getAddress',(req,res)=>{
-    const walletAddress=req.body
-    res.send("recieved wallet address")
-    console.log(walletAddress)
-})
-
-
 
 app.post("/upload", upload.single("file"), async (req, res) => {
   console.log("Uploading file:", req.file);
@@ -107,17 +59,12 @@ app.post("/upload", upload.single("file"), async (req, res) => {
       version: fileVersions[cid].currentVersion,
       originalFilename: originalFilename,
     });
-      // res.redirect("/getData");
-      // ek cheez bheji ja sakdi hai redirect ya fir json
+
   } catch (error) {
     console.error("Error uploading to BTFS:", error);
     res.status(500).json({ error: "Failed to upload to BTFS" });
   }
 });
-
-
-
-
 
 app.get("/getfile", async (req, res) => {
   const { cid, version } = req.query;
@@ -186,7 +133,6 @@ async function getFileByCID(cid, originalFilename, res) {
   }
 }
 
-
 app.put("/updatefile", upload.single("file"), async (req, res) => {
   const { cid } = req.query;
 
@@ -196,17 +142,13 @@ app.put("/updatefile", upload.single("file"), async (req, res) => {
 
   try {
     const filePath = path.join(__dirname, "./uploads", req.file.filename);
-
     const newFileHash = await computeFileHash(filePath);
-
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));
 
     const fileData = fileVersions[cid];
     if (!fileData) {
-      return res
-        .status(404)
-        .json({ error: `No previous version found for CID ${cid}` });
+      return res.status(404).json({ error: `No previous version found for CID ${cid}` });
     }
 
     const lastVersion = fileData.versions[fileData.versions.length - 1];
@@ -254,7 +196,6 @@ app.put("/updatefile", upload.single("file"), async (req, res) => {
   }
 });
 
-
 app.get("/versions", (req, res) => {
   const { cid } = req.query;
 
@@ -264,22 +205,21 @@ app.get("/versions", (req, res) => {
 
   const fileData = fileVersions[cid];
   if (!fileData) {
-    return res
-      .status(404)
-      .json({ error: `No version history found for CID ${cid}` });
+    return res.status(404).json({ error: `No version history found for CID ${cid}` });
   }
 
   res.json(fileData);
 });
 
-app.get('/wallet',(req,res)=>{
-   getTronWeb();
-   res.send("function called")
-})
-app.get('/getData',(req,res)=>{
-    res.send("hiiee")
-})
+app.get('/wallet', (req, res) => {
+  getTronWeb();
+  res.send("function called");
+});
 
-app.listen(3000)
+app.get('/getData', (req, res) => {
+  res.send("hiiee");
+});
 
-
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
+});
