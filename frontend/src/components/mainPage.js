@@ -89,36 +89,37 @@ const MainPage = () => {
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-            <span className="close-btn" onClick={closeModal}>&times;</span>
-            <h2>Connect your TronLink Wallet</h2>
+  <span className="close-btn" onClick={closeModal}>&times;</span>
+  <h2>Connect your TronLink Wallet</h2>
 
-            {/* Show spinner if connection is in progress */}
-            {loadingConnection ? (
-              <div className="loading-spinner">Connecting...</div>
-            ) : (
-              <>
-                {/* Check if TronLink is available */}
-                {!isTronLinkAvailable() && (
-                  <div className="error-message">
-                    TronLink Wallet not found. Please install it first.
-                  </div>
-                )}
+  {/* Show spinner if connection is in progress */}
+  {loadingConnection ? (
+    <div className="loading-spinner">Connecting...</div>
+  ) : (
+    <>
+      {/* Check if TronLink is available */}
+      {!isTronLinkAvailable() && (
+        <div className="error-message">
+          TronLink Wallet not found. Please install it first.
+        </div>
+      )}
 
-                {/* Wallet Action Button */}
-                <WalletActionButton onClick={handleWalletConnect} />
+      {/* Button group with WalletActionButton and Backend button */}
+      <div className="button-group">
+        <WalletActionButton className="wallet-action-button" onClick={handleWalletConnect} />
+        <button className="btn-upload" onClick={upload}>Get Started!</button>
+      </div>
 
-                {/* Backend Interaction Button */}
-                <button className="btn-upload" onClick={upload}>Backend</button>
+      {/* Display connection status */}
+      {connectionStatus && (
+        <div className="modal-message">
+          {connectionStatus}
+        </div>
+      )}
+    </>
+  )}
+</div>
 
-                {/* Display connection status */}
-                {connectionStatus && (
-                  <div className="modal-message">
-                    {connectionStatus}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
       )}
     </div>
