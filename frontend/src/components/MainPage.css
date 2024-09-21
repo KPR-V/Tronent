@@ -1,0 +1,103 @@
+/* Reset margins and padding for the entire page */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.main-page {
+  background-image: url('./images/resized7.svg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  margin: 0;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+  width: 100vw;
+  margin-left: 12.5rem;
+  margin-bottom: 2rem;
+}
+
+.btn-connect-wallet {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-connect-wallet:hover {
+  background-color: #0056b3;
+}
+
+/* Modal styles */
+/* Modal styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7); /* Darkened backdrop */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Make sure this is higher than any other element */
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  position: relative;
+  text-align: center;
+  z-index: 10000; /* Ensure the content itself is also on top */
+}
+
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.btn-upload {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn-upload:hover {
+  background-color: #218838;
+}
+
+.loading-spinner {
+  font-size: 18px;
+  color: #007bff;
+  margin-top: 20px;
+}
+
+.modal-message {
+  margin-top: 20px;
+  color: green;
+  font-weight: bold;
+}
+
