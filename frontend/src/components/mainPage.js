@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // For redirection
 import Axios from 'axios';
 import { useWallet } from '@tronweb3/tronwallet-adapter-react-hooks';
 import { WalletActionButton } from '@tronweb3/tronwallet-adapter-react-ui';
@@ -6,32 +7,29 @@ import '@tronweb3/tronwallet-adapter-react-ui/style.css'; // Ensure wallet style
 import toast, { Toaster } from 'react-hot-toast'; // For notifications
 import './MainPage.css'; // External CSS
 
-// Backend upload function
-async function upload() {
+// Function to send wallet address to the backend
+const sendingAddress = async (address, navigate) => {
   try {
-    const response = await Axios.get('http://localhost:4040/upload');
-    if (response) {
-      console.log(response.data);
-      toast.success('File uploaded successfully.');
+    const response = await Axios.post("http://localhost:4040/getAddress", { address });
+    if (response.status === 200) {
+      toast.success('Wallet address sent successfully!');
+      // Redirect to profile page after successful submission
+      setTimeout(() => navigate('/profile'), 1000); // Wait 1 second before redirecting
+    } else {
+      toast.error('Failed to send wallet address.');
     }
   } catch (error) {
-    console.error('Error uploading file:', error);
-    toast.error('Failed to upload to the backend.');
+    console.error('Error sending wallet address:', error);
+    toast.error('Error sending wallet address to backend.');
   }
-}
-
-// sends wallet address from frontend to backend (getStarted button)
+};
 
 const MainPage = () => {
-  const { address, connected, connect, disconnect } = useWallet();
+  const { address, connected, connect } = useWallet();
   const [isModalOpen, setModalOpen] = useState(false); // State for custom modal
   const [connectionStatus, setConnectionStatus] = useState(''); // Connection status
   const [loadingConnection, setLoadingConnection] = useState(false); // Show loading while connecting
-  async function sendingAddress(address) {
-    console.log(address)
-    const sendAddress =await Axios.post("http://localhost:4040/getAddress",{address})
-    console.log(sendAddress.data)
-  }
+  const navigate = useNavigate(); // Initialize the useNavigate hook for navigation
 
   // Function to open the modal
   const handleWalletClick = () => {
@@ -46,10 +44,7 @@ const MainPage = () => {
   // Handle Wallet Connection Logic
   const handleWalletConnect = async () => {
     try {
-      // Set loading while connecting
       setLoadingConnection(true);
-
-      // Trigger the wallet connection popup
       await connect();
 
       if (connected) {
@@ -64,7 +59,6 @@ const MainPage = () => {
       setConnectionStatus('Error connecting wallet. Please try again.');
       toast.error('Error connecting wallet.');
     } finally {
-      // Stop loading regardless of success or failure
       setLoadingConnection(false);
     }
   };
@@ -86,47 +80,45 @@ const MainPage = () => {
       <Toaster /> {/* For showing notifications */}
 
       <div className="content">
-        {/* Button to trigger the wallet modal */}
         <button className="btn-connect-wallet" onClick={handleWalletClick}>
           Connect Wallet
         </button>
       </div>
 
-      {/* Custom Modal Window */}
       {isModalOpen && (
         <div className="modal">
           <div className="modal-content">
-  <span className="close-btn" onClick={closeModal}>&times;</span>
-  <h2>Connect your TronLink Wallet</h2>
+            <span className="close-btn" onClick={closeModal}>&times;</span>
+            <h2>Connect your TronLink Wallet</h2>
 
-  {/* Show spinner if connection is in progress */}
-  {loadingConnection ? (
-    <div className="loading-spinner">Connecting...</div>
-  ) : (
-    <>
-      {/* Check if TronLink is available */}
-      {!isTronLinkAvailable() && (
-        <div className="error-message">
-          TronLink Wallet not found. Please install it first.
-        </div>
-      )}
+            {loadingConnection ? (
+              <div className="loading-spinner">Connecting...</div>
+            ) : (
+              <>
+                {!isTronLinkAvailable() && (
+                  <div className="error-message">
+                    TronLink Wallet not found. Please install it first.
+                  </div>
+                )}
 
-      {/* Button group with WalletActionButton and Backend button */}
-      <div className="button-group">
-        <WalletActionButton className="wallet-action-button" onClick={handleWalletConnect} />
-        <button className="btn-upload" onClick={()=>{sendingAddress(`${address}`)}}>Get Started!</button>
-      </div>
+                <div className="button-group">
+                  <WalletActionButton className="wallet-action-button" onClick={handleWalletConnect} />
+                  <button
+                    className="btn-upload"
+                    onClick={() => sendingAddress(address, navigate)} // Pass navigate function
+                  >
+                    Get Started!
+                  </button>
+                </div>
 
-      {/* Display connection status */}
-      {connectionStatus && (
-        <div className="modal-message">
-          {connectionStatus}
-        </div>
-      )}
-    </>
-  )}
-</div>
-
+                {connectionStatus && (
+                  <div className="modal-message">
+                    {connectionStatus}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
