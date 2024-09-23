@@ -16,11 +16,12 @@ const BTFS_API_URL = "http://localhost:5001/api/v1";
 
 const fileVersions = {};
 const fileMapping = {};
-
+let usersWalletAddress=""
 app.post('/getAddress', (req, res) => {
-  const walletAddress = req.body;
+  const { address } = req.body;  // Extract the address from the body
+  usersWalletAddress = address; 
   res.send("received wallet address");
-  console.log(walletAddress);
+  console.log(`${address}`);
 });
 
 app.post("/upload", upload.single("file"), async (req, res) => {
@@ -220,6 +221,48 @@ app.get('/getData', (req, res) => {
   res.send("hiiee");
 });
 
+async function checkBalanceUsingAPI(requiredBalance) {
+  try {
+    const response = await axios.post('https://api.shasta.trongrid.io/wallet/getaccount', {
+      address: usersWalletAddress,
+      visible: true
+    });
+
+    const balanceInSun = response.data.balance || 0;  // Balance in SUN (smallest unit of TRX)
+    
+    // Convert SUN to TRX (1 TRX = 1,000,000 SUN)
+    const balanceInTrx = balanceInSun / 1e6;
+
+    console.log(`Balance: ${balanceInTrx} TRX , Address is ${usersWalletAddress}, required balance is ${requiredBalance}`);
+
+    // Check if the balance is sufficient
+    if (balanceInTrx >= requiredBalance) {
+      return true;  // Sufficient balance
+    } else {
+      return false;  // Insufficient balance
+    }
+  } catch (error) {
+    console.error('Error fetching balance from API:', error);
+    throw error;
+  }
+}
+
+// Example Express route to handle the balance check using API
+app.post('/checkBalance', async (req, res) => {
+  const { address, requiredBalance } = req.body;
+  // res.send(usersWalletAddress)
+  try {
+    const hasEnoughBalance = await checkBalanceUsingAPI(requiredBalance);
+
+    if (hasEnoughBalance) {
+      res.send({ status: 'success', message: 'Sufficient balance' });
+    } else {
+      res.send({ status: 'error', message: 'Insufficient balance' });
+    }
+  } catch (error) {
+    res.status(500).send({ status: 'error', message: 'Error checking balance via API' });
+  }
+});
 app.listen(4040, () => {
   console.log("Server is running on port 4040");
 });
