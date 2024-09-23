@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useState } from 'react';
+import axios from 'axios';
+import { useWallet } from '@tronweb3/tronwallet-adapter-react-hooks';
+import { WalletActionButton } from '@tronweb3/tronwallet-adapter-react-ui';
+import '@tronweb3/tronwallet-adapter-react-ui/style.css'; // Ensure wallet styles are applied
 import { useNavigate } from 'react-router-dom'; // For navigation between routes
 import './ProfilePage.css';
-
 const ProfilePage = () => {
+  const { address, connected, connect } = useWallet();
+  const [message, setMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const navigate = useNavigate(); // Initialize navigate for naviga
   const [projects, setProjects] = useState([
     { id: 1, name: "Project Alpha" },
     { id: 2, name: "Project Beta" },
@@ -15,68 +24,84 @@ const ProfilePage = () => {
     { id: 9, name: "Project Dimension" },
     { id: 10, name: "Mysterious Eta" }
   ]);
+  const checkBalance = async () => {
+    if (!address) {
+      setMessage('Please connect your wallet first.');
+      return;
+    }
 
-  const [searchQuery, setSearchQuery] = useState('');
+    const requiredBalance = 20; // Example required balance in TRX
 
-  const navigate = useNavigate(); // Initialize navigate for navigation
+    try {
+      const response = await axios.post('http://localhost:4040/checkBalance', {
+        requiredBalance
+      });
 
-  // Function to filter projects based on search query
-  const searchProjects = (projects) => {
-    return projects.filter((project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+      if (response.data.status === 'success') {
+        setMessage('Sufficient balance');
+      } else {
+        setMessage('Insufficient balance');
+      }
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      setMessage('Error checking balance');
+    }
   };
-
+ // Function to filter projects based on search query
+  const searchProjects = (projects) => {
+  return projects.filter((project) =>
+    project.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+};
   return (
     <div className='profile-page'>
-      <div className='navigation-bar'>
-        <div className="navigation-bar-content">
-          <div className='icon'></div>
-          <div className='button-group2'>
-            {/* Navigation to the Main Page */}
-            <button 
-              className='home-page-btn' 
-              onClick={() => navigate('/')}
-            >
-              Home Page
-            </button>
+    <div className='navigation-bar'>
+      <div className="navigation-bar-content">
+        <div className='icon'></div>
+        <div className='button-group2'>
+          {/* Navigation to the Main Page */}
+          <button 
+            className='home-page-btn' 
+            onClick={() => navigate('/')}
+          >
+            Home Page
+          </button>
 
-            {/* Navigation to the Upload Page */}
-            <button 
-              className='upload-route-btn' 
-              onClick={() => navigate('/upload')}
-            >
-              Upload New File
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="explorer">
-        <div className="explorer-navigation">
-          <div className="title archivo-black-regular">
-            Your Projects
-          </div>
-          <div className='search-bar'>
-            <input
-              type="text"
-              placeholder="Search Projects"
-              className="search-input"
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="files-display">
-          {searchProjects(projects).map((project) => (
-            <div key={project.id} className="project-card">
-              <div className="project-name">{project.name}</div>
-            </div>
-          ))}
+          {/* Navigation to the Upload Page */}
+          <button 
+            className='upload-route-btn' 
+            onClick={() => navigate('/upload')}
+          >
+            Upload New File
+          </button>
         </div>
       </div>
     </div>
+
+    <div className="explorer">
+      <div className="explorer-navigation">
+        <div className="title archivo-black-regular">
+          Your Projects
+        </div>
+        <div className='search-bar'>
+          <input
+            type="text"
+            placeholder="Search Projects"
+            className="search-input"
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="files-display">
+        {searchProjects(projects).map((project) => (
+          <div key={project.id} className="project-card">
+            <div className="project-name">{project.name}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
   );
 };
-
 export default ProfilePage;
