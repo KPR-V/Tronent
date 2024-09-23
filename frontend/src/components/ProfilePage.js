@@ -24,29 +24,7 @@ const ProfilePage = () => {
     { id: 9, name: "Project Dimension" },
     { id: 10, name: "Mysterious Eta" }
   ]);
-  const checkBalance = async () => {
-    if (!address) {
-      setMessage('Please connect your wallet first.');
-      return;
-    }
-
-    const requiredBalance = 20; // Example required balance in TRX
-
-    try {
-      const response = await axios.post('http://localhost:4040/checkBalance', {
-        requiredBalance
-      });
-
-      if (response.data.status === 'success') {
-        setMessage('Sufficient balance');
-      } else {
-        setMessage('Insufficient balance');
-      }
-    } catch (error) {
-      console.error('Error checking balance:', error);
-      setMessage('Error checking balance');
-    }
-  };
+  
  // Function to filter projects based on search query
   const searchProjects = (projects) => {
   return projects.filter((project) =>
