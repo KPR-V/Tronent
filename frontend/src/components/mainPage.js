@@ -8,19 +8,22 @@ import toast, { Toaster } from 'react-hot-toast'; // For notifications
 import './MainPage.css'; // External CSS
 
 // Function to send wallet address to the backend
-const sendingAddress = async (address, navigate) => {
+const sendingAddress = async (address, navigate, setIsAddressSent) => {
   try {
     const response = await Axios.post("http://localhost:4040/getAddress", { address });
     if (response.status === 200) {
       toast.success('Wallet address sent successfully!');
+      setIsAddressSent(true);
       // Redirect to profile page after successful submission
       setTimeout(() => navigate('/profile'), 1000); // Wait 1 second before redirecting
     } else {
       toast.error('Failed to send wallet address.');
+      setIsAddressSent(false);
     }
   } catch (error) {
     console.error('Error sending wallet address:', error);
     toast.error('Error sending wallet address to backend.');
+    setIsAddressSent(false);
   }
 };
 
@@ -29,6 +32,8 @@ const MainPage = () => {
   const [isModalOpen, setModalOpen] = useState(false); // State for custom modal
   const [connectionStatus, setConnectionStatus] = useState(''); // Connection status
   const [loadingConnection, setLoadingConnection] = useState(false); // Show loading while connecting
+  const [isAddressSent, setIsAddressSent] = useState(false); // To track if wallet address is sent to backend
+  const [isGetStartedDisabled, setGetStartedDisabled] = useState(true); // For disabling Get Started button
   const navigate = useNavigate(); // Initialize the useNavigate hook for navigation
 
   // Function to open the modal
@@ -50,14 +55,17 @@ const MainPage = () => {
       if (connected) {
         setConnectionStatus('Wallet is connected!');
         toast.success('Wallet successfully connected!');
+        setGetStartedDisabled(false); // Enable Get Started button after connection
       } else {
         setConnectionStatus('Failed to connect. Please try again.');
         toast.error('Failed to connect wallet.');
+        setGetStartedDisabled(true); // Disable Get Started button if not connected
       }
     } catch (error) {
       console.error('Error connecting wallet:', error);
       setConnectionStatus('Error connecting wallet. Please try again.');
       toast.error('Error connecting wallet.');
+      setGetStartedDisabled(true); // Disable Get Started button on error
     } finally {
       setLoadingConnection(false);
     }
@@ -105,7 +113,14 @@ const MainPage = () => {
                   <WalletActionButton className="wallet-action-button" onClick={handleWalletConnect} />
                   <button
                     className="btn-upload"
-                    onClick={() => sendingAddress(address, navigate)} // Pass navigate function
+                    disabled={isGetStartedDisabled} // Disable button based on connection status
+                    onClick={() => {
+                      if (connected) {
+                        sendingAddress(address, navigate, setIsAddressSent);
+                      } else {
+                        toast.error('Please connect your wallet first.');
+                      }
+                    }}
                   >
                     Get Started!
                   </button>
