@@ -86,7 +86,6 @@ html, body {
     justify-content: flex-end;
     width: 50%;
 }
-
 .search-input {
     padding: 10px;
     width: 80%;
@@ -96,7 +95,19 @@ html, body {
     font-size: 1rem;
     color: white;
     background-color: rgb(57, 56, 56);
+    transition: box-shadow 0.3s ease; /* Add smooth transition */
 }
+
+/* Neon box-shadow when the search input is clicked or typing */
+.search-input:focus {
+    outline: none; /* Remove default focus outline */
+    box-shadow: 
+        0 0 5px white,   /* Small inner glow */
+        0 0 10px white,  /* Larger outer glow */
+        0 0 5px white,  /* Further spread */
+        0 0 10px white;  /* Final neon glow */
+}
+
 
 /* Adjusted styles to add margin-bottom and spacing between cards */
 .files-display {
@@ -111,28 +122,44 @@ html, body {
     display: grid;
     grid-template-columns: repeat(3, 1fr); /* Three columns */
     row-gap: 1rem;/* Even spacing between cards */
+    column-gap: 0.5rem;
   }
   
   .project-card {
-    background-color:rgb(57, 56, 56);
-    padding: 1rem;
-    border-radius: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 250px; /* Fixed height */
-    width: 400px;  /* Fixed width */
+    position: relative;
+    width: 350px;
+    height: 180px;
+    background-color: #1a1a1a;
+    color: white;
     margin: auto;
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    z-index: 1;
+    overflow: hidden;
   }
   
-
-.project-card:hover {
-    transform: scale(1.05); /* Slight zoom on hover */
-    transition: 300ms;
-}
+  /* Normal state with no neon effect */
+  .project-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Default subtle shadow */
+  }
+  
+  /* Neon box-shadow only on hover */
+  .project-card:hover {
+    box-shadow: 
+      0 0 5px #b065ff,  /* Small inner glow */
+      0 0 10px #b065ff,  /* Larger outer glow */
+      0 0 10px #b065ff,  /* Further spread for neon effect */
+      0 0 20px #b065ff;  /* Final neon glow */
+  }
+  
+  /* Optional extra hover scale animation */
+  .project-card:hover {
+    transform: scale(1.05);
+  }
+  
+  
 
 .project-name {
     font-size: 1.2rem;
@@ -166,10 +193,10 @@ html, body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-  }
-  
-  /* Modal Content */
-  .modal-content1 {
+}
+
+/* Modal Content */
+.modal-content1 {
     background-color: rgb(26, 23, 23);
     color: white;
     padding: 2rem;
@@ -177,37 +204,107 @@ html, body {
     width: 50%;
     max-width: 600px;
     box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2);
-  }
-  
-  .file-input {
-    margin-top: 1rem;
+    text-align: center;
+}
+
+/* Drag and Drop Zone */
+.drag-drop-zone {
+    border: 2px dashed #6200ea;
+    border-radius: 10px;
+    padding: 1rem;
     margin-bottom: 1rem;
-  }
-  
-  .upload-btn {
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.drag-drop-zone.active {
+    background-color: rgba(98, 0, 234, 0.1);
+}
+
+/* File Input */
+.file-input {
+    display: none; /* Hide the default file input */
+}
+
+/* Styled Upload Button */
+.upload-btn {
     background-color: #6200ea;
     color: white;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .upload-btn:hover {
+    display: flex;
+    align-items: center; /* Align spinner and text */
+    justify-content: center;
+    gap: 10px; /* Gap between spinner and text */
+    font-size: 1rem;
+}
+
+.upload-btn:hover {
     background-color: #7f39fb;
-  }
-  
-  .close-btn1 {
+}
+
+/* Close Button */
+.close-btn1 {
     background-color: #f44336;
     color: white;
     padding: 8px 16px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-  }
-  
-  .close-btn1:hover {
+    margin-top: 1rem;
+}
+
+.close-btn1:hover {
     background-color: #e57373;
-  }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #6200ea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Tick Mark for Success */
+.tick-mark {
+    color: green;
+    font-size: 1.5rem;
+}
+
+/* No Files Message */
+.no-files {
+    color: white;
+    font-size: 1.8rem;
+}
+
+/* General Styling for the Modal */
+.modal-content1 h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    color: #ffffff;
+}
+
+.modal-content1 p {
+    font-size: 1rem;
+    color: #ffffff;
+    margin: 0.5rem 0;
+}
+
+.modal-content1 button {
+    margin-top: 1rem;
+}
+
+
   
   

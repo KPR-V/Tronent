@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const BTFS_API_URL = "http://172.29.130.245:5001/api/v1";
+const BTFS_API_URL = "http://10.81.12.199:5001/api/v1";
 
 const fileVersions = {};
 const fileMapping = {};
@@ -30,30 +30,51 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file uploaded" });
     }
+
     const filePath = path.join(__dirname, "./uploads", req.file.filename);
     const form = new FormData();
     form.append("file", fs.createReadStream(filePath));
+
+    // Log FormData content to verify it's properly built
+    console.log("FormData being sent:", form);
+
     const fileHash = await computeFileHash(filePath);
+    
+    // Perform the BTFS API request with error handling
     const response = await axios.post(`${BTFS_API_URL}/add`, form, {
       headers: {
         ...form.getHeaders(),
       },
+      timeout: 5000 // Set a timeout to prevent indefinite hanging
     });
+    
+    // Check the response from BTFS
+    if (!response || !response.data || !response.data.Hash) {
+      console.error('Invalid response from BTFS:', response.data);
+      return res.status(500).json({ error: "Failed to upload to BTFS: Invalid response" });
+    }
+
     const cid = response.data.Hash;
     const originalFilename = req.file.originalname;
 
+    // Check if this is the first version of the file
     if (!fileVersions[cid]) {
       fileVersions[cid] = {
         currentVersion: 1,
         versions: [{ version: 1, cid: cid, hash: fileHash }],
       };
     }
+
+    // Add the original filename to the fileMapping
     fileMapping[cid] = originalFilename;
 
+    // Pin the file in BTFS
     await axios.post(`${BTFS_API_URL}/pin/add`, null, {
       params: { arg: cid },
+      timeout: 5000 // Adding timeout for the pinning request
     });
 
+    // Respond with success and file details
     res.json({
       message: "File uploaded to BTFS and pinned",
       cid: cid,
@@ -62,10 +83,19 @@ app.post("/upload", upload.single("file"), async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error uploading to BTFS:", error);
+    // Improved error logging to capture more details
+    if (error.response) {
+      console.error('BTFS API Error Response:', error.response.data);
+    } else if (error.request) {
+      console.error('BTFS API No Response:', error.request);
+    } else {
+      console.error('BTFS API Request Error:', error.message);
+    }
+    
     res.status(500).json({ error: "Failed to upload to BTFS" });
   }
 });
+
 
 app.get("/getfile", async (req, res) => {
   const { cid, version } = req.query;
