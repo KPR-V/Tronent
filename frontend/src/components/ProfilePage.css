@@ -78,6 +78,7 @@ html, body {
     padding: 2rem;
     font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     font-weight: 600;
+    color: rgb(227, 212, 212);
 }
 
 .search-bar {
@@ -124,12 +125,24 @@ html, body {
     row-gap: 1rem;/* Even spacing between cards */
     column-gap: 0.5rem;
   }
+
+  .project-name {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+}
+
   
   .project-card {
     position: relative;
     width: 350px;
     height: 180px;
-    background-color: #1a1a1a;
+    background-color: #181818;
     color: white;
     margin: auto;
     padding: 20px;
@@ -159,13 +172,60 @@ html, body {
     transform: scale(1.05);
   }
   
-  
 
-.project-name {
-    font-size: 1.2rem;
-    font-weight: 500;
+/* The delete button is a red cross positioned in the top-right corner */
+.delete-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-weight: 600;
     color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 1s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: 2s;
 }
+
+.delete-btn:hover .delete-text {
+    opacity: 0; /* Make the cross invisible */
+}
+
+.delete-btn:hover .hover-delete-text {
+    display: block; /* Show the "Delete" text */
+    
+}
+
+/* Initially hide the "Delete" text */
+.hover-delete-text {
+    display: none;
+    color: white;
+    background-color: rgb(243, 81, 81);
+    height: 1.2rem;
+    width: 4rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 1s ease;
+    border-radius: 0.4rem;
+    text-align: center;
+    
+}
+
+/* The red cross */
+.delete-text {
+    display: block;
+    font-size: 1rem;
+    color: white;
+    background-color: rgb(243, 81, 81);
+    font-weight: 600;
+    width: 1.5rem;
+    border-radius: 0.4rem;
+    text-align: center;
+
+}
+
 
 /* Custom scrollbar */
 .files-display::-webkit-scrollbar {
@@ -228,7 +288,8 @@ html, body {
 
 /* Styled Upload Button */
 .upload-btn {
-    background-color: #6200ea;
+    background-color: #7c4bc2;
+    margin: auto;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -239,6 +300,8 @@ html, body {
     justify-content: center;
     gap: 10px; /* Gap between spinner and text */
     font-size: 1rem;
+    height: 2rem;
+    width: 15rem;
 }
 
 .upload-btn:hover {
@@ -267,6 +330,7 @@ html, body {
     height: 16px;
     border: 2px solid #f3f3f3;
     border-top: 2px solid #6200ea;
+    margin-top: 0.5rem;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -305,6 +369,133 @@ html, body {
     margin-top: 1rem;
 }
 
+.modal-content1{
+    z-index: 1001;
+}
 
+.project-title{
+    padding: 0.5rem;
+    display: flex;
+    margin:auto;
+    width: 60%;
+}
+
+.project-name-input{
+    margin: auto;
+    width: 15rem;
+    height: 1.75rem;
+    background-color: transparent;
+    border-radius: 0.5rem;
+    border: 2px solid gray;
+    color: white;
+}
   
+.project-name-input:focus{
+    box-shadow: 
+      0 0 2px #b065ff,  /* Small inner glow */
+      0 0 5px #b065ff,  /* Larger outer glow */
+      0 0 5px #b065ff,  /* Further spread for neon effect */
+      0 0 10px #b065ff;  /* Final neon glow */
+}
   
+.project-name-input ::placeholder{
+    color: rgb(157, 155, 155);
+    text-align: center;
+}
+
+
+.choose-files-btn{
+    width: 15.5rem;
+    height: 2rem;
+    background-color: transparent;
+    border-radius: 0.5rem;
+    border: 2px solid gray;
+    color: white;
+}
+
+.choose-files-btn:hover{
+    background-color: #7c4bc2;
+    border: none;
+}
+
+.file-uploaded-name{
+    margin-right: 1rem;
+    background-color: transparent;
+    width: 50%;
+    margin: auto;
+    overflow: hidden;
+    
+}
+
+
+.file-list1{
+    overflow: hidden;
+    width: 30%;
+    margin: auto;
+}
+
+.file-list1 {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .file-item {
+    cursor: pointer;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .file-item:hover {
+    background-color: #7c4bc2;
+  }
+  
+
+  .create-folder-btn {
+    margin: 1rem;
+    padding: 10px 20px;
+    background-color: #7c4bc2;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .create-folder-btn:hover {
+    background-color: #7f39fb;
+  }
+  
+
+  .modal-content1 {
+    position: relative; /* Ensure the modal can position correctly */
+    z-index: 1000; /* Default z-index for modals */
+    /* Other styling properties for your modal */
+  }
+  
+  .upload-modal {
+    z-index: 1001; /* Higher z-index for the upload modal */
+  }
+  
+  /* Add styles for the modal overlay, if needed */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    z-index: 1000; /* Z-index for modal overlay */
+  }
+
+  .file-upload-name{
+    background-color: transparent;
+    border-radius: 0.5rem;
+    margin: 1rem;
+    border: 2px solid gray;
+    height: 1.5rem;
+    margin-right: 1.7rem;
+    color: white;
+  }
