@@ -24,7 +24,7 @@ app.post('/getAddress', (req, res) => {
   console.log(`${address}`);
 });
 
-app.post("/upload", upload.single("file"), async (req, res) => {
+app.post("/upload", upload.single("files"), async (req, res) => {
   console.log("Uploading file:", req.file);
   try {
     if (!req.file) {
