@@ -1,12 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import './ProfilePage.css';
 import toast from 'react-hot-toast';
+import { useWallet } from '@tronweb3/tronwallet-adapter-react-hooks';
+import { WalletActionButton } from '@tronweb3/tronwallet-adapter-react-ui';
+import '@tronweb3/tronwallet-adapter-react-ui/style.css'; 
+import  Datacontext from '../datacontext';
+import { useContext } from 'react';
+import CryptoJS from 'crypto-js';
 
+// Key for encryption and decryption (must be kept secret)
+const secretKey = 'sehajjain';
+
+// Function to encrypt data
+const encryptData = (data) => {
+  return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
+};
+
+// Function to decrypt data
+const decryptData = (cipherText) => {
+  const bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
+  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+};
+
+// const samplieCID="QmYkHHbyJLZR13j7T16VmroSHvkLAf5uXbztFgJTkDKyEP";
 const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [projects, setProjects] = useState([]);
+  
+  const {projects ,setProjects}=useContext(Datacontext)
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isProjectDetailsModalOpen, setIsProjectDetailsModalOpen] = useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
@@ -17,6 +39,33 @@ const ProfilePage = () => {
   const [dragging, setDragging] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [currentProject, setCurrentProject] = useState(null);
+  const { address, connected, connect, signTransaction } = useWallet();
+  const [loading, setLoading] = useState(false);
+   // Load projects from localStorage on component mount
+   useEffect(() => {
+    const savedProjects = localStorage.getItem('projects');
+    if (savedProjects) {
+      try {
+        // Decrypt the encrypted projects
+        const decryptedProjects = decryptData(savedProjects);
+        setProjects(decryptedProjects);
+      } catch (error) {
+        console.error('Failed to decrypt projects from localStorage:', error);
+        localStorage.removeItem('projects'); // Remove corrupted data if any
+      }
+    }
+  }, [setProjects]);
+
+ // When saving projects, exclude the 'files' array from being saved in local storage
+ useEffect(() => {
+  // Sync projects state to localStorage with AES encryption
+  if (projects.length > 0) {
+    const encryptedProjects = encryptData(projects);
+    localStorage.setItem('projects', encryptedProjects);
+  }
+}, [projects]); // This effect will run every time `projects` changes
+
+
 
   const navigate = useNavigate();
 
@@ -32,9 +81,26 @@ const ProfilePage = () => {
     setProjectName('');
   };
 
-  const openProjectDetailsModal = (project) => {
+  const openProjectDetailsModal = async(project) => {
     setCurrentProject(project);
     setIsProjectDetailsModalOpen(true);
+    // try {
+      // setLoading(true);
+      //     {loading && <span className="loading-spinner"></span>}
+  //   // Fetch the files for the project based on the project ID or any identifier
+  //   // const response = await axios.get(`http://localhost:4040/getFiles?projectId=${project.id}`);
+  //   // const fetchedFiles = response.data.files;
+
+  //   // Update the current project with fetched files
+  //   setCurrentProject((prevProject) => ({
+  //     ...prevProject,
+  //     files: fetchedFiles,
+  //   }));
+  // } catch (error) {
+  //   console.error('Error fetching files:', error);
+  // } finally {
+  //   setLoading(false);
+  // }
   };
 
   const closeProjectDetailsModal = () => {
@@ -59,8 +125,77 @@ const ProfilePage = () => {
     updatedNames[index] = value;
     setCustomFileNames(updatedNames);
   };
+  const checkBalance = async () => {
+    if (!address) {
+      setMessage('Please connect your wallet first.');
+      return;
+    }
+
+    const requiredBalance = 20;
+
+    try {
+      const response = await axios.post('http://localhost:4040/checkBalance', {
+        requiredBalance
+      });
+
+      if (response.data.status === 'success') {
+        setMessage('Sufficient balance');
+      } else {
+        setMessage('Insufficient balance');
+      }
+    } catch (error) {
+      console.error('Error checking balance:', error);
+      setMessage('Error checking balance');
+    }
+  };
+  const triggerTransaction = async (latest2cid) => {
+    if (!connected) {
+      setMessage('Please connect your wallet first.');
+      return;
+    }
+  
+    try {
+      const contractAddress = 'TGXJVSgz4KyAKKQeZ1Gy2EmMYSueKWLGYp';
+      const contract = await window.tronWeb.contract().at(contractAddress);
+  
+      // Sending 20 TRX to the contract for the operation
+      const trxAmount = 20; // Amount the user is paying
+      const callValue = window.tronWeb.toSun(20); // Convert to Sun (smallest unit of TRX)
+  
+      const transaction = await contract.uploadfile(latest2cid).send({
+        feeLimit: 100000000,
+        callValue: callValue // Using the entire 20 TRX for the contract
+      });
+
+      // console.log('Transaction:', transaction);
+      console.log("https://nile.tronscan.org/#/transaction/" + transaction);
+      // Calculate excess TRX to be sent (assuming 20 TRX was sent and `callValue` was used)
+      const excessAmount = window.tronWeb.toSun(trxAmount) - callValue;
+  
+      // Send excess to the backend to forward to the recipient wallet
+      if (excessAmount > 0) {
+        await axios.post('http://localhost:4040/sendExcessTrx', {
+          fromAddress: address, // User's wallet address
+          amount: excessAmount // Excess amount in Sun
+        });
+
+        return true;
+      }
+  
+      setMessage('Transaction successful');
+    } catch (error) {
+      console.error('Error triggering transaction:', error);
+      setMessage('Transaction failed');
+      return false;
+    }
+  };
 
   const handleFileUpload = async () => {
+    // call check balance
+    // make a pop --> u have enough balance/ u dont have enough balance
+    // if u dont have  -->  swap using sunswap (any other currency to trx)
+    // make button which redirects u to https://sunswap.com/#/home --> now try uploading again (jehra upload file button uss te redirect)
+
     if (selectedFiles.length > 0 && currentProject) {
       setIsUploading(true);
       const formData = new FormData();
@@ -75,10 +210,22 @@ const ProfilePage = () => {
           )
         );
 
+        const latestCid = responses[responses.length - 1].data.cid;
+        console.log('latestCid:', latestCid);
+
+
+        
+       
+        if(triggerTransaction(latestCid)){
         // Map the responses to include custom file names and cid
         const uploadedFilesWithCIDs = responses.map((response, index) => ({
           name: customFileNames[index] || response.data.originalFilename, // Use custom name if provided
           cid: response.data.cid,
+          // cid milgi
+          // hun karana transacation 
+
+          // trigger transaction function  haiga--> 
+          
         }));
 
         const updatedProject = {
@@ -90,7 +237,7 @@ const ProfilePage = () => {
           prevProjects.map((project) => (project.id === currentProject.id ? updatedProject : project))
         );
         setCurrentProject(updatedProject);
-        setMessage('Files uploaded successfully!');
+        setMessage('Files uploaded successfully!')};
       } catch (error) {
         setMessage('Error uploading files.');
         console.error('File upload error:', error);
@@ -107,8 +254,6 @@ const ProfilePage = () => {
       const newProject = {
         id: Date.now(),
         name: projectName,
-        cid: projectName,
-        version: '1.0',
         files: [],
       };
 

@@ -43,68 +43,9 @@ const UploadPage = () => {
     }
   };
   
-  const checkBalance = async () => {
-    if (!address) {
-      setMessage('Please connect your wallet first.');
-      return;
-    }
-
-    const requiredBalance = 20;
-
-    try {
-      const response = await axios.post('http://localhost:4040/checkBalance', {
-        requiredBalance
-      });
-
-      if (response.data.status === 'success') {
-        setMessage('Sufficient balance');
-      } else {
-        setMessage('Insufficient balance');
-      }
-    } catch (error) {
-      console.error('Error checking balance:', error);
-      setMessage('Error checking balance');
-    }
-  };
 
 
-  const triggerTransaction = async () => {
-    if (!connected) {
-      setMessage('Please connect your wallet first.');
-      return;
-    }
   
-    try {
-      const contractAddress = 'TGXJVSgz4KyAKKQeZ1Gy2EmMYSueKWLGYp';
-      const contract = await window.tronWeb.contract().at(contractAddress);
-  
-      // Sending 20 TRX to the contract for the operation
-      const trxAmount = 20; // Amount the user is paying
-      const callValue = window.tronWeb.toSun(20); // Convert to Sun (smallest unit of TRX)
-  
-      const transaction = await contract.uploadfile(samplieCID).send({
-        feeLimit: 100000000,
-        callValue: callValue // Using the entire 20 TRX for the contract
-      });
-
-      console.log('Transaction:', transaction);
-      // Calculate excess TRX to be sent (assuming 20 TRX was sent and `callValue` was used)
-      const excessAmount = window.tronWeb.toSun(trxAmount) - callValue;
-  
-      // Send excess to the backend to forward to the recipient wallet
-      if (excessAmount > 0) {
-        await axios.post('http://localhost:4040/sendExcessTrx', {
-          fromAddress: address, // User's wallet address
-          amount: excessAmount // Excess amount in Sun
-        });
-      }
-  
-      setMessage('Transaction successful');
-    } catch (error) {
-      console.error('Error triggering transaction:', error);
-      setMessage('Transaction failed');
-    }
-  };
   return (
     <div>
       <div>UploadPage</div>
