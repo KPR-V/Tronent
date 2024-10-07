@@ -1,0 +1,68 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  
+  .modal-content2 {
+    background-color: rgb(26, 23, 23);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  .transaction-success .animated-tick {
+    font-size: 48px;
+    color: green;
+    margin-bottom: 20px;
+    /* Add animation here for tick */
+  }
+
+  .transaction-success{
+    color: white;
+  }
+  
+  .transaction-failure {
+    color: white;
+  }
+
+  .transaction-failure h2{
+    color: red;
+  }
+  
+  .swap-crypto-btn {
+    background-color: transparent;
+    padding: 10px 20px;
+    border: 2px solid white;
+    border-radius: 5px;
+    cursor: pointer;
+    color: white;
+    transition: 500ms;
+  }
+  
+  .swap-crypto-btn:hover {
+    background-color: rgb(176, 77, 238);
+    border: none;
+    color: black;
+  }
+  
+  .close-btn1 {
+    margin-top: 20px;
+    background-color: #f44336;
+    padding: 10px 20px;
+    border: none;
+    color: white;
+    cursor: pointer;
+  }
+  
+  .close-btn1:hover {
+    background-color: #d32f2f;
+  }
+  

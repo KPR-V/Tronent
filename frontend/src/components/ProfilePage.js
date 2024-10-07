@@ -1,17 +1,18 @@
-import React, { useState , useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import './ProfilePage.css';
-import toast from 'react-hot-toast';
-import { useWallet } from '@tronweb3/tronwallet-adapter-react-hooks';
-import { WalletActionButton } from '@tronweb3/tronwallet-adapter-react-ui';
-import '@tronweb3/tronwallet-adapter-react-ui/style.css'; 
-import  Datacontext from '../datacontext';
-import { useContext } from 'react';
-import CryptoJS from 'crypto-js';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import "./ProfilePage.css";
+import toast from "react-hot-toast";
+import { useWallet } from "@tronweb3/tronwallet-adapter-react-hooks";
+import { WalletActionButton } from "@tronweb3/tronwallet-adapter-react-ui";
+import "@tronweb3/tronwallet-adapter-react-ui/style.css";
+import Datacontext from "../datacontext";
+import { useContext } from "react";
+import CryptoJS from "crypto-js";
+import TransactionModal from "./TransactionModal";
 
 // Key for encryption and decryption (must be kept secret)
-const secretKey = 'sehajjain';
+const secretKey = "sehajjain";
 
 // Function to encrypt data
 const encryptData = (data) => {
@@ -26,46 +27,55 @@ const decryptData = (cipherText) => {
 
 // const samplieCID="QmYkHHbyJLZR13j7T16VmroSHvkLAf5uXbztFgJTkDKyEP";
 const ProfilePage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  
-  const {projects ,setProjects}=useContext(Datacontext)
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { projects, setProjects } = useContext(Datacontext);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isProjectDetailsModalOpen, setIsProjectDetailsModalOpen] = useState(false);
+  const [isProjectDetailsModalOpen, setIsProjectDetailsModalOpen] =
+    useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [customFileNames, setCustomFileNames] = useState([]); // State for custom file names
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [projectName, setProjectName] = useState('');
+  const [projectName, setProjectName] = useState("");
   const [currentProject, setCurrentProject] = useState(null);
   const { address, connected, connect, signTransaction } = useWallet();
   const [loading, setLoading] = useState(false);
-   // Load projects from localStorage on component mount
-   useEffect(() => {
-    const savedProjects = localStorage.getItem('projects');
+
+  // Add state for transaction modal visibility and success status
+  const [isTransactionModalVisible, setIsTransactionModalVisible] =
+    useState(false);
+  const [transactionSuccess, setTransactionSuccess] = useState(false);
+
+  // Function to close the modal
+  const closeTransactionModal = () => {
+    setIsTransactionModalVisible(false);
+  };
+  // Load projects from localStorage on component mount
+  useEffect(() => {
+    const savedProjects = localStorage.getItem("projects");
     if (savedProjects) {
       try {
         // Decrypt the encrypted projects
         const decryptedProjects = decryptData(savedProjects);
         setProjects(decryptedProjects);
       } catch (error) {
-        console.error('Failed to decrypt projects from localStorage:', error);
-        localStorage.removeItem('projects'); // Remove corrupted data if any
+        console.error("Failed to decrypt projects from localStorage:", error);
+        localStorage.removeItem("projects"); // Remove corrupted data if any
       }
     }
   }, [setProjects]);
 
- // When saving projects, exclude the 'files' array from being saved in local storage
- useEffect(() => {
-  // Sync projects state to localStorage with AES encryption
-  if (projects.length > 0) {
-    const encryptedProjects = encryptData(projects);
-    localStorage.setItem('projects', encryptedProjects);
-  }
-}, [projects]); // This effect will run every time `projects` changes
-
-
+  // When saving projects, exclude the 'files' array from being saved in local storage
+  useEffect(() => {
+    // Sync projects state to localStorage with AES encryption
+    if (projects.length > 0) {
+      const encryptedProjects = encryptData(projects);
+      localStorage.setItem("projects", encryptedProjects);
+    }
+  }, [projects]); // This effect will run every time `projects` changes
 
   const navigate = useNavigate();
 
@@ -73,34 +83,49 @@ const ProfilePage = () => {
     setIsUploadModalOpen(!isUploadModalOpen);
     setSelectedFiles([]);
     setCustomFileNames([]); // Reset custom file names
-    setMessage('');
+    setMessage("");
   };
 
   const toggleCreateFolderModal = () => {
     setIsCreateFolderModalOpen(!isCreateFolderModalOpen);
-    setProjectName('');
+    setProjectName("");
   };
 
-  const openProjectDetailsModal = async(project) => {
+// Close the modal when returning from SunSwap
+useEffect(() => {
+  const handleWindowFocus = () => {
+    if (isTransactionModalVisible) {
+      setIsTransactionModalVisible(false);
+    }
+  };
+
+  window.addEventListener("focus", handleWindowFocus);
+
+  return () => {
+    window.removeEventListener("focus", handleWindowFocus);
+  };
+}, [isTransactionModalVisible]);
+  
+  const openProjectDetailsModal = async (project) => {
     setCurrentProject(project);
     setIsProjectDetailsModalOpen(true);
     // try {
-      // setLoading(true);
-      //     {loading && <span className="loading-spinner"></span>}
-  //   // Fetch the files for the project based on the project ID or any identifier
-  //   // const response = await axios.get(`http://localhost:4040/getFiles?projectId=${project.id}`);
-  //   // const fetchedFiles = response.data.files;
+    // setLoading(true);
+    //     {loading && <span className="loading-spinner"></span>}
+    //   // Fetch the files for the project based on the project ID or any identifier
+    //   // const response = await axios.get(`http://localhost:4040/getFiles?projectId=${project.id}`);
+    //   // const fetchedFiles = response.data.files;
 
-  //   // Update the current project with fetched files
-  //   setCurrentProject((prevProject) => ({
-  //     ...prevProject,
-  //     files: fetchedFiles,
-  //   }));
-  // } catch (error) {
-  //   console.error('Error fetching files:', error);
-  // } finally {
-  //   setLoading(false);
-  // }
+    //   // Update the current project with fetched files
+    //   setCurrentProject((prevProject) => ({
+    //     ...prevProject,
+    //     files: fetchedFiles,
+    //   }));
+    // } catch (error) {
+    //   console.error('Error fetching files:', error);
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const closeProjectDetailsModal = () => {
@@ -117,7 +142,7 @@ const ProfilePage = () => {
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
-    setCustomFileNames(Array(files.length).fill('')); // Initialize custom file names array
+    setCustomFileNames(Array(files.length).fill("")); // Initialize custom file names array
   };
 
   const handleCustomNameChange = (index, value) => {
@@ -127,130 +152,135 @@ const ProfilePage = () => {
   };
   const checkBalance = async () => {
     if (!address) {
-      setMessage('Please connect your wallet first.');
+      setMessage("Please connect your wallet first.");
       return;
     }
 
     const requiredBalance = 20;
 
     try {
-      const response = await axios.post('http://localhost:4040/checkBalance', {
-        requiredBalance
+      const response = await axios.post("http://localhost:4040/checkBalance", {
+        requiredBalance,
       });
 
-      if (response.data.status === 'success') {
-        setMessage('Sufficient balance');
+      if (response.data.status === "success") {
+        setMessage("Sufficient balance");
       } else {
-        setMessage('Insufficient balance');
+        setMessage("Insufficient balance");
       }
     } catch (error) {
-      console.error('Error checking balance:', error);
-      setMessage('Error checking balance');
+      console.error("Error checking balance:", error);
+      setMessage("Error checking balance");
     }
   };
   const triggerTransaction = async (latest2cid) => {
     if (!connected) {
-      setMessage('Please connect your wallet first.');
+      setMessage("Please connect your wallet first.");
       return;
     }
-  
+
     try {
-      const contractAddress = 'TGXJVSgz4KyAKKQeZ1Gy2EmMYSueKWLGYp';
+      const contractAddress = "TGXJVSgz4KyAKKQeZ1Gy2EmMYSueKWLGYp";
       const contract = await window.tronWeb.contract().at(contractAddress);
-  
+
       // Sending 20 TRX to the contract for the operation
       const trxAmount = 20; // Amount the user is paying
       const callValue = window.tronWeb.toSun(20); // Convert to Sun (smallest unit of TRX)
-  
+
       const transaction = await contract.uploadfile(latest2cid).send({
         feeLimit: 100000000,
-        callValue: callValue // Using the entire 20 TRX for the contract
+        callValue: callValue,
       });
 
-      // console.log('Transaction:', transaction);
+      // If transaction succeeds, show success modal
+      setTransactionSuccess(true);
+      setIsTransactionModalVisible(true); // Open the modal
       console.log("https://nile.tronscan.org/#/transaction/" + transaction);
-      // Calculate excess TRX to be sent (assuming 20 TRX was sent and `callValue` was used)
-      const excessAmount = window.tronWeb.toSun(trxAmount) - callValue;
-  
-      // Send excess to the backend to forward to the recipient wallet
-      if (excessAmount > 0) {
-        await axios.post('http://localhost:4040/sendExcessTrx', {
-          fromAddress: address, // User's wallet address
-          amount: excessAmount // Excess amount in Sun
-        });
 
-        return true;
+      const excessAmount = window.tronWeb.toSun(trxAmount) - callValue;
+
+      if (excessAmount > 0) {
+        await axios.post("http://localhost:4040/sendExcessTrx", {
+          fromAddress: address,
+          amount: excessAmount,
+        });
       }
-  
-      setMessage('Transaction successful');
+
+      setMessage("Transaction successful");
+      return true;
     } catch (error) {
-      console.error('Error triggering transaction:', error);
-      setMessage('Transaction failed');
+      console.error("Error triggering transaction:", error);
+
+      // If transaction fails, show failure modal
+      setTransactionSuccess(false);
+      setIsTransactionModalVisible(true); // Open the modal
+      setMessage("Transaction failed");
       return false;
     }
   };
 
   const handleFileUpload = async () => {
-    // call check balance
-    // make a pop --> u have enough balance/ u dont have enough balance
-    // if u dont have  -->  swap using sunswap (any other currency to trx)
-    // make button which redirects u to https://sunswap.com/#/home --> now try uploading again (jehra upload file button uss te redirect)
-
     if (selectedFiles.length > 0 && currentProject) {
       setIsUploading(true);
       const formData = new FormData();
-      selectedFiles.forEach((file) => formData.append('files', file));
-  
+      selectedFiles.forEach((file) => formData.append("files", file));
+
       try {
         const responses = await Promise.all(
-          selectedFiles.map((file) => 
-            axios.post('http://localhost:4040/upload', formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
+          selectedFiles.map((file) =>
+            axios.post("http://localhost:4040/upload", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
             })
           )
         );
 
         const latestCid = responses[responses.length - 1].data.cid;
-        console.log('latestCid:', latestCid);
+        console.log("latestCid:", latestCid);
 
+        // Trigger the transaction
+        const transactionSuccessful = await triggerTransaction(latestCid);
 
-        
-       
-        if(triggerTransaction(latestCid)){
-        // Map the responses to include custom file names and cid
-        const uploadedFilesWithCIDs = responses.map((response, index) => ({
-          name: customFileNames[index] || response.data.originalFilename, // Use custom name if provided
-          cid: response.data.cid,
-          // cid milgi
-          // hun karana transacation 
+        if (transactionSuccessful) {
+          // Map the responses to include custom file names and CID
+          const uploadedFilesWithCIDs = responses.map((response, index) => ({
+            name: customFileNames[index] || response.data.originalFilename,
+            cid: response.data.cid,
+          }));
 
-          // trigger transaction function  haiga--> 
-          
-        }));
+          const updatedProject = {
+            ...currentProject,
+            files: [...currentProject.files, ...uploadedFilesWithCIDs],
+          };
 
-        const updatedProject = {
-          ...currentProject,
-          files: [...currentProject.files, ...uploadedFilesWithCIDs],
-        };
-  
-        setProjects((prevProjects) =>
-          prevProjects.map((project) => (project.id === currentProject.id ? updatedProject : project))
-        );
-        setCurrentProject(updatedProject);
-        setMessage('Files uploaded successfully!')};
+          setProjects((prevProjects) =>
+            prevProjects.map((project) =>
+              project.id === currentProject.id ? updatedProject : project
+            )
+          );
+          setCurrentProject(updatedProject);
+
+          // Set the modal to show success
+          setTransactionSuccess(true);
+        } else {
+          // Set the modal to show failure
+          setTransactionSuccess(false);
+        }
+
+        // Show the transaction modal
+        setIsTransactionModalVisible(true);
       } catch (error) {
-        setMessage('Error uploading files.');
-        console.error('File upload error:', error);
+        setMessage("Error uploading files.");
+        console.error("File upload error:", error);
       } finally {
         setIsUploading(false);
       }
     } else {
-      setMessage('Please select files and choose a project to upload to.');
+      setMessage("Please select files and choose a project to upload to.");
     }
   };
-  
+
   const handleCreateFolder = () => {
-    if (projectName.trim() !== '') {
+    if (projectName.trim() !== "") {
       const newProject = {
         id: Date.now(),
         name: projectName,
@@ -258,11 +288,11 @@ const ProfilePage = () => {
       };
 
       setProjects((prevProjects) => [...prevProjects, newProject]);
-      setProjectName('');
-      toast.success('Project folder created successfully!');
+      setProjectName("");
+      toast.success("Project folder created successfully!");
       toggleCreateFolderModal();
     } else {
-      toast.error('Please enter a project name.');
+      toast.error("Please enter a project name.");
     }
   };
 
@@ -270,52 +300,54 @@ const ProfilePage = () => {
     try {
       const response = await axios({
         url: `http://localhost:4040/getfile?cid=${cid}`,
-        method: 'GET',
-        responseType: 'blob',
+        method: "GET",
+        responseType: "blob",
       });
-  
-      const fileType = response.headers['content-type'];
+
+      const fileType = response.headers["content-type"];
       const blob = new Blob([response.data], { type: fileType });
       const fileURL = window.URL.createObjectURL(blob);
-  
-      if (fileType.startsWith('image/') || fileType === 'application/pdf') {
-        window.open(fileURL, '_blank');
+
+      if (fileType.startsWith("image/") || fileType === "application/pdf") {
+        window.open(fileURL, "_blank");
       } else {
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = fileURL;
         a.download = fileName; // Use the fileName from the clicked file
         a.click();
       }
     } catch (error) {
-      console.error('Error fetching file:', error);
+      console.error("Error fetching file:", error);
     }
   };
 
   const handleDeleteProject = (id) => {
     const updatedProjects = projects.filter((project) => project.id !== id);
     setProjects(updatedProjects);
-    toast.success('Project deleted successfully!');
+    toast.success("Project deleted successfully!");
   };
 
   const handleDeleteFile = (fileIndex) => {
     if (currentProject) {
-      const updatedFiles = currentProject.files.filter((_, index) => index !== fileIndex);
+      const updatedFiles = currentProject.files.filter(
+        (_, index) => index !== fileIndex
+      );
       const updatedProject = {
         ...currentProject,
         files: updatedFiles,
       };
-  
+
       // Update the current project and the projects state
       setCurrentProject(updatedProject);
       setProjects((prevProjects) =>
-        prevProjects.map((project) => (project.id === currentProject.id ? updatedProject : project))
+        prevProjects.map((project) =>
+          project.id === currentProject.id ? updatedProject : project
+        )
       );
-      
-      toast.success('File deleted successfully!');
+
+      toast.success("File deleted successfully!");
     }
   };
-  
-  
 
   // Drag and drop handlers
   const handleDragOver = (e) => {
@@ -332,7 +364,10 @@ const ProfilePage = () => {
     setDragging(false);
     const files = Array.from(e.dataTransfer.files);
     setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-    setCustomFileNames((prevNames) => [...prevNames, ...Array(files.length).fill('')]); // Update custom names
+    setCustomFileNames((prevNames) => [
+      ...prevNames,
+      ...Array(files.length).fill(""),
+    ]); // Update custom names
   };
 
   return (
@@ -341,7 +376,7 @@ const ProfilePage = () => {
         <div className="navigation-bar-content">
           <div className="icon"></div>
           <div className="button-group2">
-            <button className="home-page-btn" onClick={() => navigate('/')}>
+            <button className="home-page-btn" onClick={() => navigate("/")}>
               Home Page
             </button>
             <button onClick={toggleCreateFolderModal} className="home-page-btn">
@@ -392,52 +427,61 @@ const ProfilePage = () => {
       </div>
 
       {/* Modal for Project Details */}
-      {/* Modal for Project Details */}
-{isProjectDetailsModalOpen && currentProject && (
-  <div className="modal-overlay">
-    <div className="modal-content1">
-      <h2>{currentProject.name}</h2>
-      <ul className="file-list">
-        {currentProject.files.map((file, index) => (
-          <li key={index} className="file-item">
-            <span className="file-name" onClick={() => handleFileClick(file.cid, file.name)}>
-              {file.name}
-            </span>
-            {/* Add delete button */}
-            <span
-              className="delete-text"
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering file click event
-                handleDeleteFile(index); // Call the file deletion handler
-              }}
-            >
-              &#10005;
-            </span>
-            <span className="hover-delete-text">Delete</span>
-          </li>
-        ))}
-      </ul>
+      {isProjectDetailsModalOpen && currentProject && (
+        <div className="modal-overlay">
+          <div className="modal-content1">
+            <h2>{currentProject.name}</h2>
+            <ul className="file-list">
+              {currentProject.files.map((file, index) => (
+                <li key={index} className="file-item">
+                  <span
+                    className="file-name"
+                    onClick={() => handleFileClick(file.cid, file.name)}
+                  >
+                    {file.name}
+                  </span>
+                  {/* Add delete button */}
+                  <span
+                    className="delete-text"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering file click event
+                      handleDeleteFile(index); // Call the file deletion handler
+                    }}
+                  >
+                    &#10005;
+                  </span>
+                  <span className="hover-delete-text">Delete</span>
+                </li>
+              ))}
+            </ul>
 
-      <div>
-        <button onClick={toggleUploadModal} className="choose-files-btn">
-          Upload New File
-        </button>
-      </div>
-      <button onClick={closeProjectDetailsModal} className="close-btn1">
-        Close
-      </button>
-    </div>
-  </div>
-)}
-
+            <div>
+              <button onClick={toggleUploadModal} className="choose-files-btn">
+                Upload New File
+              </button>
+            </div>
+            <button onClick={closeProjectDetailsModal} className="close-btn1">
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal for Upload */}
       {isUploadModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content1 upload-modal" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+          <div
+            className="modal-content1 upload-modal"
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
             <h2>Upload your new Files here!</h2>
             <div>
-              <button onClick={() => document.getElementById('fileInput').click()} className="choose-files-btn">
+              <button
+                onClick={() => document.getElementById("fileInput").click()}
+                className="choose-files-btn"
+              >
                 Choose Files
               </button>
               <input
@@ -445,9 +489,9 @@ const ProfilePage = () => {
                 id="fileInput"
                 multiple
                 onChange={handleFileChange}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
               />
-              <div className={`drag-drop-area ${dragging ? 'dragging' : ''}`}>
+              <div className={`drag-drop-area ${dragging ? "dragging" : ""}`}>
                 Drag & Drop files here
               </div>
             </div>
@@ -456,14 +500,16 @@ const ProfilePage = () => {
                 <h3>Selected Files:</h3>
                 <ul>
                   {Array.from(selectedFiles).map((file, index) => (
-                    <li className='file-uploaded-name' key={index}>
+                    <li className="file-uploaded-name" key={index}>
                       {file.name}
                       <input
                         type="text"
                         placeholder="Enter file name"
                         value={customFileNames[index]}
-                        onChange={(e) => handleCustomNameChange(index, e.target.value)}
-                        className='file-upload-name'
+                        onChange={(e) =>
+                          handleCustomNameChange(index, e.target.value)
+                        }
+                        className="file-upload-name"
                       />
                     </li>
                   ))}
@@ -481,6 +527,13 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
+
+      {/* Include the modal */}
+      <TransactionModal
+        isVisible={isTransactionModalVisible}
+        isSuccess={transactionSuccess}
+        onClose={() => setIsTransactionModalVisible(false)}
+      />
 
       {/* Modal for Create Folder */}
       {isCreateFolderModalOpen && (
