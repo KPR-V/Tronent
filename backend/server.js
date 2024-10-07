@@ -1,12 +1,16 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+// const TronWeb = require('tronweb'); // Correct import
+// console.log(TronWeb)
 const FormData = require("form-data");
 const axios = require("axios");
 const cors = require('cors');
 const computeFileHash = require('./utils/computeFileHash');
 const upload = require('./utils/multerConfig');
-
+const bodyParser = require('body-parser');
+const TronWebModule = require('tronweb'); // Import the module
+const TronWeb = TronWebModule.default.TronWeb; // Access the TronWeb class from the default property
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -22,6 +26,7 @@ app.post('/getAddress', (req, res) => {
   usersWalletAddress = address; 
   res.send("received wallet address");
   console.log(`${address}`);
+
 });
 
 app.post("/upload", upload.single("files"), async (req, res) => {
@@ -253,7 +258,7 @@ app.get('/getData', (req, res) => {
 
 async function checkBalanceUsingAPI(requiredBalance) {
   try {
-    const response = await axios.post('https://api.shasta.trongrid.io/wallet/getaccount', {
+    const response = await axios.post('https://nile.trongrid.io/wallet/getaccount', {
       address: usersWalletAddress,
       visible: true
     });
@@ -277,13 +282,33 @@ async function checkBalanceUsingAPI(requiredBalance) {
   }
 }
 
+
+const fullNode = 'https://nile.trongrid.io';
+const solidityNode = 'https://nile.trongrid.io';
+const eventServer = 'https://nile.trongrid.io';
+
+const tronWeb = new TronWeb(fullNode, solidityNode, eventServer);
+
+app.post('/sendExcessTrx', async (req, res) => {
+  const { fromAddress, amount } = req.body;
+  const recipientAddress = 'TAPsixpGU5gwhYd4kftVPGRYGmN16zt7ac'; // Address to send excess TRX
+
+  try {
+    // Sending excess TRX to the designated wallet address
+    const transaction = await tronWeb.trx.sendTransaction(recipientAddress, amount, fromAddress);
+    res.json({ status: 'success', transaction });
+  } catch (error) {
+    console.error('Error sending excess TRX:', error);
+    res.status(500).json({ error: 'Error sending TRX' });
+  }
+});
+
 // Example Express route to handle the balance check using API
 app.post('/checkBalance', async (req, res) => {
   const { address, requiredBalance } = req.body;
   // res.send(usersWalletAddress)
   try {
     const hasEnoughBalance = await checkBalanceUsingAPI(requiredBalance);
-
     if (hasEnoughBalance) {
       res.send({ status: 'success', message: 'Sufficient balance' });
     } else {
@@ -293,6 +318,108 @@ app.post('/checkBalance', async (req, res) => {
     res.status(500).send({ status: 'error', message: 'Error checking balance via API' });
   }
 });
+const USDTtokenAddress = 'TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf';
+const factoryContractAddress = 'TUTGcsGDRScK1gsDPMELV2QZxeESWb1Gac';
+const swapRouterContractAddress = 'TFkswj6rUfK3cQtFGzungCkNXxD2UCpEVD';
+const NonFungibleManagerAddress = 'TPQzqHbCzQfoVdAV6bLwGDos8Lk2UjXz2R';
+
+
+async function convertToTrx(usersWalletAddress, amount) {
+
+    
+    let factoryContract = await tronWeb.contract().at(factoryContractAddress);
+    let liquidityPoolAddress = await factoryContract.methods.getPool(
+      '0x0000000000000000000000000000000000000000', // Address for TRX
+      USDTtokenAddress, 
+      100 
+    ).call();
+
+    console.log('Liquidity Pool Address:', liquidityPoolAddress);
+
+    const trxAmount = 20; // Target amount of TRX
+    let contract = await tronWeb.getContract(liquidityPoolAddress);
+    const usdtAmount = trxAmount / exchangeRate; // Calculate how much USDT is needed
+
+    // Prepare the transaction to perform the swap using the SwapRouter contract
+    const swapRouterContract = await tronWeb.contract().at(swapRouterContractAddress);
+
+    const params = [
+      {
+        type: 'address',
+        value: tronWeb.address.toHex(USDTtokenAddress) // tokenIn (USDT)
+      },
+      {
+        type: 'address',
+        value: '0x0000000000000000000000000000000000000000' // tokenOut (TRX)
+      },
+      {
+        type: 'uint24',
+        value: 100 // fee
+      },
+      {
+        type: 'address',
+        value: tronWeb.address.toHex(usersWalletAddress) // recipient
+      },
+      {type: 'uint256',
+        value: usdtAmount.toString() // amountIn (USDT)
+        },
+      { type: 'uint256',
+        value: trxAmount.toString() // amountOutMinimum (TRX)
+      },
+      {
+        type: 'uint256',
+        value: (Math.floor(Date.now() / 1000) + 60 * 10).toString() // deadline (10 mins from now)
+      },
+      {
+        type: 'uint160',
+        value: '0' // sqrtPriceLimitX96 (no limit)
+      }
+    ];
+
+    const tradeResponse = await tronWeb.transactionBuilder.triggerSmartContract(
+      swapRouterContractAddress, // SwapRouter contract address
+      'exactInputSingle((address,address,uint24,address,uint256,uint256,uint256,uint160))', // Method to call
+      {
+        feeLimit: 1000000000, // Set a reasonable fee limit (1,000 TRX in sun units)
+        callValue: 0, // No TRX is sent with the call
+        owner_address: tronWeb.address.toHex(usersWalletAddress) // Owner address (sender's address)
+      },
+      params,
+      tronWeb.address.toHex(usersWalletAddress) // Owner address (sender's address)
+    );
+
+    const signedTxn = await tronWeb.trx.sign(tradeResponse.transaction);
+    const broadcastResult = await tronWeb.trx.sendRawTransaction(signedTxn);
+
+    return { success: true, transactionHash: broadcastResult.txid };
+  
+}
+async function trial() {
+  const myaddress = "TAPsixpGU5gwhYd4kftVPGRYGmN16zt7ac";
+  const path = [
+    '0xe518c608a37e2a262050e10be0c9d03c7a0877f3000bb843c42f702b0a11565c46e34022aab677d7bd8ae3', // USDT contract address
+    '' // Leave empty for native TRX
+];
+  const deadline = Math.floor(Date.now() / 1000) + 600 ;
+  console.log(deadline);
+  const contract = await tronWeb
+  .contract()
+  .at('TFkswj6rUfK3cQtFGzungCkNXxD2UCpEVD');
+  await contract.methods.exactInput([path, userAddress, deadline]).send();
+}
+app.post('/sunswap', async (req, res) => {
+  try {
+    const { address, amount } = req.body;
+    console.log('Received request:', address, amount); // Log to ensure data is received correctly
+
+    const conversionResult = await trial();
+    res.json({ status: 'success', conversionResult });
+  } catch (error) {
+    console.error('Error converting to TRX:', error);
+    res.status(500).json({ status: 'error', message: 'Error converting to TRX' });
+  }
+});
+
 app.listen(4040, () => {
   console.log("Server is running on port 4040");
 });
