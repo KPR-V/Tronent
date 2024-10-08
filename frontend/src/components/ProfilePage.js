@@ -10,6 +10,7 @@ import Datacontext from "../datacontext";
 import { useContext } from "react";
 import CryptoJS from "crypto-js";
 import TransactionModal from "./TransactionModal";
+import logo from './images/tronenticon5.svg';
 
 // Key for encryption and decryption (must be kept secret)
 const secretKey = "sehajjain";
@@ -374,7 +375,10 @@ useEffect(() => {
     <div className="profile-page">
       <div className="navigation-bar">
         <div className="navigation-bar-content">
-          <div className="icon"></div>
+        <div className="icon">
+  <img src={logo} alt="Logo" className="logo-image" />
+</div>
+
           <div className="button-group2">
             <button className="home-page-btn" onClick={() => navigate("/")}>
               Home Page
@@ -388,7 +392,7 @@ useEffect(() => {
 
       <div className="explorer">
         <div className="explorer-navigation">
-          <div className="title archivo-black-regular">Your Projects</div>
+          <div className="title">Your Projects</div>
           <div className="search-bar">
             <input
               type="text"

@@ -8,11 +8,20 @@ const TransactionModal = ({ isVisible, isSuccess, onClose }) => {
     <div className="modal-overlay">
       <div className="modal-content2 transaction-modal">
         {isSuccess ? (
-          <div className="transaction-success">
-            <div className="animated-tick">✔️</div> {/* You can style this for the animated tick */}
-            <h2>Transaction Successful!</h2>
-            <p>Your file was uploaded successfully.</p>
-          </div>
+        <div className="transaction-success">
+        <svg
+          className="animated-tick"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 52 52"
+        >
+          <path className="tick-circle" fill="none" d="M26 1C12.3 1 1 12.3 1 26s11.3 25 25 25 25-11.3 25-25S39.7 1 26 1z"/>
+          <path className="tick-path" fill="none" d="M14 27l8 8 16-16"/>
+        </svg>
+        <h2>Transaction Successful!</h2>
+        <p>Your file was uploaded successfully.</p>
+      </div>
+      
+       
         ) : (
           <div className="transaction-failure">
             <h2>Insufficient TRX</h2>

@@ -4,6 +4,12 @@ html, body {
     height: 100%;
     width: 100%;
     overflow: hidden; /* Prevents the main screen from overflowing */
+    font-family: Baloo;
+}
+
+@font-face {
+    font-family:Baloo ;
+    src: url('./BalooPaaji2-VariableFont_wght.ttf');
 }
 
 .profile-page {
@@ -31,6 +37,14 @@ html, body {
     align-items: center;
 }
 
+.logo-image {
+    width: 300px;  /* Adjust the size as needed */
+    height: auto;
+    margin-left: 1.5rem;
+    margin-top: 2rem;
+  }
+  
+
 .button-group2 {
     width: 20%;
 }
@@ -39,11 +53,12 @@ html, body {
     padding: 10px 20px;
     background-color: transparent;
     color: rgb(198, 127, 252);
-    font-family: sans-serif;
+    font-family: Baloo;
     font-weight: 600;
     border: none;
     cursor: pointer;
     border-radius: 0.5rem;
+    font-size: 1rem;
 }
 
 .home-page-btn:hover, .upload-route-btn:hover {
@@ -65,7 +80,7 @@ html, body {
 }
 
 .explorer-navigation {
-    width: 90%;
+    width: 95%;
     margin: auto;
     height: 20%;
     display: flex;
@@ -74,9 +89,9 @@ html, body {
 }
 
 .title {
-    font-size: 4.5rem;
+    font-size: 3rem;
     padding: 2rem;
-    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    font-family: Baloo;
     font-weight: 600;
     color: rgb(227, 212, 212);
 }
@@ -92,6 +107,7 @@ html, body {
     width: 80%;
     margin: 1rem;
     border-radius: 1rem;
+    font-family: Baloo;
     border: none;
     font-size: 1rem;
     color: white;
@@ -128,6 +144,7 @@ html, body {
 
   .project-name {
     font-size: 1.2rem;
+    font-family: Baloo;
     font-weight: 500;
     color: white;
     display: flex;
@@ -187,6 +204,7 @@ html, body {
     justify-content: center;
     align-items: center;
     transform: 2s;
+    padding: 0.2rem;
 }
 
 .delete-btn:hover .delete-text {
@@ -203,13 +221,17 @@ html, body {
     display: none;
     color: white;
     background-color: rgb(243, 81, 81);
-    height: 1.2rem;
+    height: 1.5rem;
     width: 4rem;
     font-weight: 600;
     font-size: 1rem;
     transition: all 1s ease;
     border-radius: 0.4rem;
     text-align: center;
+    font-family: Baloo;
+    margin-bottom: 0.2rem;
+    
+
     
 }
 
@@ -221,8 +243,11 @@ html, body {
     background-color: rgb(243, 81, 81);
     font-weight: 600;
     width: 1.5rem;
+    height: 1.5rem;
     border-radius: 0.4rem;
     text-align: center;
+    font-family: Baloo;
+    margin-bottom: 0.2rem;
 
 }
 
@@ -265,6 +290,7 @@ html, body {
     max-width: 600px;
     box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.2);
     text-align: center;
+    font-family: Baloo;
 }
 
 /* Drag and Drop Zone */
@@ -302,6 +328,7 @@ html, body {
     font-size: 1rem;
     height: 2rem;
     width: 15rem;
+    font-family: Baloo;
 }
 
 .upload-btn:hover {
@@ -357,16 +384,19 @@ html, body {
     margin-bottom: 1.5rem;
     font-size: 1.5rem;
     color: #ffffff;
+    font-family: Baloo;
 }
 
 .modal-content1 p {
     font-size: 1rem;
     color: #ffffff;
     margin: 0.5rem 0;
+    font-family: Baloo;
 }
 
 .modal-content1 button {
     margin-top: 1rem;
+    font-family: Baloo;
 }
 
 .modal-content1{
@@ -378,6 +408,7 @@ html, body {
     display: flex;
     margin:auto;
     width: 60%;
+    font-family: Baloo;
 }
 
 .project-name-input{
@@ -388,6 +419,7 @@ html, body {
     border-radius: 0.5rem;
     border: 2px solid gray;
     color: white;
+    font-family: Baloo;
 }
   
 .project-name-input:focus{
@@ -401,6 +433,7 @@ html, body {
 .project-name-input ::placeholder{
     color: rgb(157, 155, 155);
     text-align: center;
+    font-family: Baloo;
 }
 
 
@@ -411,6 +444,7 @@ html, body {
     border-radius: 0.5rem;
     border: 2px solid gray;
     color: white;
+    font-family: Baloo;
 }
 
 .choose-files-btn:hover{
@@ -424,6 +458,7 @@ html, body {
     width: 50%;
     margin: auto;
     overflow: hidden;
+    font-family: Baloo;
     
 }
 
@@ -446,6 +481,7 @@ html, body {
     transition: background-color 0.2s;
     display: flex;
     justify-content: space-between;
+    font-family: Baloo;
   }
   
   .file-item:hover {
@@ -462,6 +498,7 @@ html, body {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    font-family: Baloo;
   }
   
   .create-folder-btn:hover {
@@ -473,10 +510,12 @@ html, body {
     position: relative; /* Ensure the modal can position correctly */
     z-index: 1000; /* Default z-index for modals */
     /* Other styling properties for your modal */
+    font-family: Baloo;
   }
   
   .upload-modal {
     z-index: 1001; /* Higher z-index for the upload modal */
+    font-family: Baloo;
   }
   
   /* Add styles for the modal overlay, if needed */
@@ -498,4 +537,5 @@ html, body {
     height: 1.5rem;
     margin-right: 1.7rem;
     color: white;
+    font-family: Baloo;
   }

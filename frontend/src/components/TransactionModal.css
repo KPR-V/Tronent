@@ -10,31 +10,70 @@
     justify-content: center;
     z-index: 9999;
   }
+
+  @font-face {
+    font-family:Baloo ;
+    src: url('./BalooPaaji2-VariableFont_wght.ttf');
+}
   
   .modal-content2 {
     background-color: rgb(26, 23, 23);
     padding: 20px;
     border-radius: 10px;
     text-align: center;
+    font-family: Baloo;
   }
   
-  .transaction-success .animated-tick {
-    font-size: 48px;
-    color: green;
+  .transaction-success {
+    text-align: center;
+    color: white;
+    font-family: Baloo;
+  }
+  
+  .animated-tick {
+    width: 100px;
+    height: 100px;
     margin-bottom: 20px;
-    /* Add animation here for tick */
+  }
+  
+  .tick-circle {
+    stroke: #28a745;
+    stroke-width: 2;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: drawCircle 1s ease-out forwards;
+  }
+  
+  .tick-path {
+    stroke: #28a745;
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: drawCheck 0.5s ease-out 0.8s forwards;
+  }
+  
+  @keyframes drawCircle {
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+  
+  @keyframes drawCheck {
+    100% {
+      stroke-dashoffset: 0;
+    }
   }
 
-  .transaction-success{
-    color: white;
-  }
   
   .transaction-failure {
     color: white;
+    font-family: Baloo;
   }
 
   .transaction-failure h2{
     color: red;
+    font-family: Baloo;
   }
   
   .swap-crypto-btn {
@@ -45,6 +84,7 @@
     cursor: pointer;
     color: white;
     transition: 500ms;
+    font-family: Baloo;
   }
   
   .swap-crypto-btn:hover {
@@ -60,6 +100,7 @@
     border: none;
     color: white;
     cursor: pointer;
+    font-family: Baloo;
   }
   
   .close-btn1:hover {
