@@ -14,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const BTFS_API_URL = "http://10.61.116.115:5001/api/v1";
+const BTFS_API_URL = "http://10.81.12.199:5001/api/v1";
 
 const fileVersions = {};
 const fileMapping = {};

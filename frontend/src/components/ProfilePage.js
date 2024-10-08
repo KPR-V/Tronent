@@ -128,19 +128,29 @@ const ProfilePage = () => {
 
   const handleCreateFolder = async () => {
     if (projectName.trim() !== "") {
-      try {
-        const contract = await window.tronWeb.contract().at(contractAddress);
-        await contract.uploadFileToFolder(projectName, "").send({
-          feeLimit: 100000000,
-          callValue: 0,
-        });
+      const flag = await checkBalance();
+      console.log(flag);
+      if (flag === false) {
+        setIsUploading(false);
+        setTransactionSuccess(false);
+        setIsTransactionModalVisible(true);
+        return;
+      } else {
+        console.log("Creating folder");
+        try {
+          const contract = await window.tronWeb.contract().at(contractAddress);
+          await contract.uploadFileToFolder(projectName, "").send({
+            feeLimit: 100000000,
+            callValue: 0,
+          });
 
-        await loadProjectsFromBlockchain();
-        toast.success("Project folder created successfully!");
-        toggleCreateFolderModal();
-      } catch (error) {
-        console.error("Error creating folder:", error);
-        toast.error("Failed to create project folder.");
+          await loadProjectsFromBlockchain();
+          toast.success("Project folder created successfully!");
+          toggleCreateFolderModal();
+        } catch (error) {
+          console.error("Error creating folder:", error);
+          toast.error("Failed to create project folder.");
+        }
       }
     } else {
       toast.error("Please enter a project name.");
@@ -150,62 +160,67 @@ const ProfilePage = () => {
   const handleFileUpload = async () => {
     if (selectedFiles.length > 0 && currentProject) {
       setIsUploading(true);
-
-      try {
-        const responses = await Promise.all(
-          selectedFiles.map((file) => {
-            const formData = new FormData();
-            formData.append("files", file);
-            return axios.post("http://localhost:4040/upload", formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-            });
-          })
-        );
-
-        const contract = await window.tronWeb.contract().at(contractAddress);
-
-        for (const response of responses) {
-          await contract
-            .uploadFileToFolder(currentProject.name, response.data.cid)
-            .send({
-              feeLimit: 100000000,
-              callValue: window.tronWeb.toSun(20),
-            });
-        }
-        setTransactionSuccess(true);
-        setIsTransactionModalVisible(true);
-
-        const newFiles = responses.map((response, index) => ({
-          cid: response.data.cid,
-          name: `${currentProject.name} version ${
-            currentProject.files.length + index + 1
-          }`,
-        }));
-
-        setCurrentProject((prev) => ({
-          ...prev,
-          files: [...prev.files, ...newFiles],
-        }));
-
-        setProjects((prevProjects) =>
-          prevProjects.map((project) =>
-            project.name === currentProject.name
-              ? { ...project, files: [...project.files, ...newFiles] }
-              : project
-          )
-        );
-
-        setMessage("Files uploaded successfully!");
-        toast.success("Files uploaded successfully!");
-        setSelectedFiles([]);
-      } catch (error) {
-        setTransactionSuccess(false);
-        setIsTransactionModalVisible(true);
-        console.error("Error uploading files:", error);
-        setMessage("Error uploading files.");
-        toast.error("Failed to upload files.");
-      } finally {
+      const flag = await checkBalance();
+      if (flag === false) {
         setIsUploading(false);
+        setTransactionSuccess(flag);
+        return;
+      } else {
+        try {
+          const responses = await Promise.all(
+            selectedFiles.map((file) => {
+              const formData = new FormData();
+              formData.append("files", file);
+              return axios.post("http://localhost:4040/upload", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+              });
+            })
+          );
+
+          const contract = await window.tronWeb.contract().at(contractAddress);
+
+          for (const response of responses) {
+            await contract
+              .uploadFileToFolder(currentProject.name, response.data.cid)
+              .send({
+                feeLimit: 100000000,
+                callValue: window.tronWeb.toSun(20),
+              });
+          }
+          setTransactionSuccess(true);
+          setIsTransactionModalVisible(true);
+
+          const newFiles = responses.map((response, index) => ({
+            cid: response.data.cid,
+            name: `${currentProject.name} version ${currentProject.files.length + index + 1
+              }`,
+          }));
+
+          setCurrentProject((prev) => ({
+            ...prev,
+            files: [...prev.files, ...newFiles],
+          }));
+
+          setProjects((prevProjects) =>
+            prevProjects.map((project) =>
+              project.name === currentProject.name
+                ? { ...project, files: [...project.files, ...newFiles] }
+                : project
+            )
+          );
+
+          setMessage("Files uploaded successfully!");
+          toast.success("Files uploaded successfully!");
+          setSelectedFiles([]);
+        } catch (error) {
+          setTransactionSuccess(false);
+          setIsTransactionModalVisible(true);
+          console.error("Error uploading files:", error);
+          setMessage("Error uploading files.");
+          toast.error("Failed to upload files.");
+        } finally {
+          setIsUploading(false);
+        }
       }
     } else {
       setMessage("Please select files and choose a project to upload to.");
@@ -328,8 +343,10 @@ const ProfilePage = () => {
 
       if (response.data.status === "success") {
         setMessage("Sufficient balance");
+        return true;
       } else {
         setMessage("Insufficient balance");
+        return false;
       }
     } catch (error) {
       console.error("Error checking balance:", error);

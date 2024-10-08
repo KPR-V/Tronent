@@ -5,7 +5,7 @@ const TransactionModal = ({ isVisible, isSuccess, onClose }) => {
   if (!isVisible) return null;
 
   return (
-    <div className="modal-overlay">
+    <div className="modal-overlay5">
       <div className="modal-content2 transaction-modal">
         {isSuccess ? (
           <div className="transaction-success">
