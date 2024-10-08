@@ -1,109 +1,107 @@
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-  }
-
-  @font-face {
-    font-family:Baloo ;
-    src: url('./BalooPaaji2-VariableFont_wght.ttf');
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
-  
-  .modal-content2 {
-    background-color: rgb(26, 23, 23);
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    font-family: Baloo;
-  }
-  
-  .transaction-success {
-    text-align: center;
-    color: white;
-    font-family: Baloo;
-  }
-  
-  .animated-tick {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 20px;
-  }
-  
-  .tick-circle {
-    stroke: #28a745;
-    stroke-width: 2;
-    stroke-dasharray: 166;
-    stroke-dashoffset: 166;
-    animation: drawCircle 1s ease-out forwards;
-  }
-  
-  .tick-path {
-    stroke: #28a745;
-    stroke-width: 4;
-    stroke-linecap: round;
-    stroke-dasharray: 48;
-    stroke-dashoffset: 48;
-    animation: drawCheck 0.5s ease-out 0.8s forwards;
-  }
-  
-  @keyframes drawCircle {
-    100% {
-      stroke-dashoffset: 0;
-    }
-  }
-  
-  @keyframes drawCheck {
-    100% {
-      stroke-dashoffset: 0;
-    }
-  }
 
-  
-  .transaction-failure {
-    color: white;
-    font-family: Baloo;
-  }
+@font-face {
+  font-family: Baloo;
+  src: url("./fonts/BalooPaaji2-VariableFont_wght.ttf");
+}
 
-  .transaction-failure h2{
-    color: red;
-    font-family: Baloo;
+.modal-content2 {
+  background-color: rgb(26, 23, 23);
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  font-family: Baloo;
+}
+
+.transaction-success {
+  text-align: center;
+  color: white;
+  font-family: Baloo;
+}
+
+.animated-tick {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+}
+
+.tick-circle {
+  stroke: #28a745;
+  stroke-width: 2;
+  stroke-dasharray: 166;
+  stroke-dashoffset: 166;
+  animation: drawCircle 1s ease-out forwards;
+}
+
+.tick-path {
+  stroke: #28a745;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: drawCheck 0.5s ease-out 0.8s forwards;
+}
+
+@keyframes drawCircle {
+  100% {
+    stroke-dashoffset: 0;
   }
-  
-  .swap-crypto-btn {
-    background-color: transparent;
-    padding: 10px 20px;
-    border: 2px solid white;
-    border-radius: 5px;
-    cursor: pointer;
-    color: white;
-    transition: 500ms;
-    font-family: Baloo;
+}
+
+@keyframes drawCheck {
+  100% {
+    stroke-dashoffset: 0;
   }
-  
-  .swap-crypto-btn:hover {
-    background-color: rgb(176, 77, 238);
-    border: none;
-    color: black;
-  }
-  
-  .close-btn1 {
-    margin-top: 20px;
-    background-color: #f44336;
-    padding: 10px 20px;
-    border: none;
-    color: white;
-    cursor: pointer;
-    font-family: Baloo;
-  }
-  
-  .close-btn1:hover {
-    background-color: #d32f2f;
-  }
-  
+}
+
+.transaction-failure {
+  color: white;
+  font-family: Baloo;
+}
+
+.transaction-failure h2 {
+  color: red;
+  font-family: Baloo;
+}
+
+.swap-crypto-btn {
+  background-color: transparent;
+  padding: 10px 20px;
+  border: 2px solid white;
+  border-radius: 5px;
+  cursor: pointer;
+  color: white;
+  transition: 500ms;
+  font-family: Baloo;
+}
+
+.swap-crypto-btn:hover {
+  background-color: rgb(176, 77, 238);
+  border: none;
+  color: black;
+}
+
+.close-btn1 {
+  margin-top: 20px;
+  background-color: #f44336;
+  padding: 10px 20px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-family: Baloo;
+}
+
+.close-btn1:hover {
+  background-color: #d32f2f;
+}

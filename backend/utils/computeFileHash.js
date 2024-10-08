@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const fs = require('fs');
+const crypto = require("crypto");
+const fs = require("fs");
 
 const computeFileHash = (filePath) => {
   return new Promise((resolve, reject) => {

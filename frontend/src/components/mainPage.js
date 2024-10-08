@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import Axios from "axios";
-import toast, { Toaster } from "react-hot-toast"; 
-import "./MainPage.css"; 
-
+import toast, { Toaster } from "react-hot-toast";
+import "./MainPage.css";
 
 const sendingAddress = async (address, navigate, setIsAddressSent) => {
   try {
@@ -13,7 +12,7 @@ const sendingAddress = async (address, navigate, setIsAddressSent) => {
     if (response.status === 200) {
       toast.success("Wallet address sent successfully!");
       setIsAddressSent(true);
-      setTimeout(() => navigate("/profile"), 1000); 
+      setTimeout(() => navigate("/profile"), 1000);
     } else {
       toast.error("Failed to send wallet address.");
       setIsAddressSent(false);
@@ -26,17 +25,16 @@ const sendingAddress = async (address, navigate, setIsAddressSent) => {
 };
 
 const MainPage = () => {
-  const [address, setAddress] = useState(null); 
+  const [address, setAddress] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
-  const [isModalOpen, setModalOpen] = useState(false); 
-  const [connectionStatus, setConnectionStatus] = useState(""); 
-  const [loadingConnection, setLoadingConnection] = useState(false); 
-  const [isAddressSent, setIsAddressSent] = useState(false); 
-  const [isGetStartedDisabled, setGetStartedDisabled] = useState(true); 
-  const [connectionAttempts, setConnectionAttempts] = useState(0); 
-  const navigate = useNavigate(); 
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("");
+  const [loadingConnection, setLoadingConnection] = useState(false);
+  const [isAddressSent, setIsAddressSent] = useState(false);
+  const [isGetStartedDisabled, setGetStartedDisabled] = useState(true);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
+  const navigate = useNavigate();
 
- 
   useEffect(() => {
     if (
       window.tronWeb &&
@@ -49,9 +47,7 @@ const MainPage = () => {
       setGetStartedDisabled(false);
       toast.success("Wallet already connected!");
 
-      
-      setTimeout(() => navigate("/profile"), 1000); 
-     
+      setTimeout(() => navigate("/profile"), 1000);
     }
   }, [navigate]);
 
@@ -63,14 +59,11 @@ const MainPage = () => {
     setModalOpen(false);
   };
 
-  
   const handleWalletConnect = async () => {
     try {
       setLoadingConnection(true);
 
-     
       if (window.tronLink) {
-       
         await window.tronLink.request({
           method: "tron_requestAccounts",
         });
@@ -120,12 +113,10 @@ const MainPage = () => {
     }
   };
 
- 
   const isTronLinkAvailable = () => {
     return window.tronWeb && window.tronWeb.defaultAddress.base58;
   };
 
- 
   const handleGetStarted = () => {
     if (isConnected && address) {
       sendingAddress(address, navigate, setIsAddressSent);
@@ -136,7 +127,7 @@ const MainPage = () => {
 
   return (
     <div className="main-page">
-      <Toaster /> 
+      <Toaster />
       <div className="content">
         <button className="btn-connect-wallet" onClick={handleWalletClick}>
           {isConnected ? "Wallet Connected" : "Connect Wallet"}
@@ -161,7 +152,6 @@ const MainPage = () => {
                 )}
 
                 <div className="button-group">
-                
                   <button
                     className="wallet-action-button"
                     onClick={handleWalletConnect}
@@ -169,10 +159,9 @@ const MainPage = () => {
                     Select Wallet
                   </button>
 
-                 
                   <button
                     className="btn-upload"
-                    disabled={isGetStartedDisabled} 
+                    disabled={isGetStartedDisabled}
                     onClick={handleGetStarted}
                   >
                     Get Started!

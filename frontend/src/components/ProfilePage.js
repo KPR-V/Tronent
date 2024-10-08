@@ -1,89 +1,88 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import "./ProfilePage.css";
 import toast from "react-hot-toast";
 import { useWallet } from "@tronweb3/tronwallet-adapter-react-hooks";
-import { WalletActionButton } from "@tronweb3/tronwallet-adapter-react-ui";
 import "@tronweb3/tronwallet-adapter-react-ui/style.css";
 import Datacontext from "../datacontext";
-import { useContext } from "react";
-import CryptoJS from "crypto-js";
 import TransactionModal from "./TransactionModal";
-import logo from './images/tronenticon5.svg';
+import logo from "./images/tronenticon5.svg";
 
-// Key for encryption and decryption (must be kept secret)
-const secretKey = "sehajjain";
-
-// Function to encrypt data
-const encryptData = (data) => {
-  return CryptoJS.AES.encrypt(JSON.stringify(data), secretKey).toString();
-};
-
-// Function to decrypt data
-const decryptData = (cipherText) => {
-  const bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
-  return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-};
-
-// const samplieCID="QmYkHHbyJLZR13j7T16VmroSHvkLAf5uXbztFgJTkDKyEP";
 const ProfilePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
-
   const { projects, setProjects } = useContext(Datacontext);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isProjectDetailsModalOpen, setIsProjectDetailsModalOpen] =
     useState(false);
   const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
-  const [customFileNames, setCustomFileNames] = useState([]); // State for custom file names
   const [message, setMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [currentProject, setCurrentProject] = useState(null);
-  const { address, connected, connect, signTransaction } = useWallet();
+  const { address } = useWallet();
   const [loading, setLoading] = useState(false);
-
-  // Add state for transaction modal visibility and success status
+  const navigate = useNavigate();
   const [isTransactionModalVisible, setIsTransactionModalVisible] =
     useState(false);
   const [transactionSuccess, setTransactionSuccess] = useState(false);
-
-  // Function to close the modal
   const closeTransactionModal = () => {
     setIsTransactionModalVisible(false);
   };
-  // Load projects from localStorage on component mount
-  useEffect(() => {
-    const savedProjects = localStorage.getItem("projects");
-    if (savedProjects) {
-      try {
-        // Decrypt the encrypted projects
-        const decryptedProjects = decryptData(savedProjects);
-        setProjects(decryptedProjects);
-      } catch (error) {
-        console.error("Failed to decrypt projects from localStorage:", error);
-        localStorage.removeItem("projects"); // Remove corrupted data if any
-      }
-    }
-  }, [setProjects]);
+  const contractAddress = "TRQojfypg3RAjrsF4B2QPtJLcKbuwbBjFh";
 
-  // When saving projects, exclude the 'files' array from being saved in local storage
-  useEffect(() => {
-    // Sync projects state to localStorage with AES encryption
-    if (projects.length > 0) {
-      const encryptedProjects = encryptData(projects);
-      localStorage.setItem("projects", encryptedProjects);
-    }
-  }, [projects]); // This effect will run every time `projects` changes
+  const loadProjectsFromBlockchain = useCallback(async () => {
+    if (!address || !window.tronWeb) return;
 
-  const navigate = useNavigate();
+    try {
+      setLoading(true);
+      const contract = await window.tronWeb.contract().at(contractAddress);
+      const result = await contract.retrieveAllFoldersAndCIDs().call();
+      const [folderNames, allCIDs] = result;
+
+      const loadedProjects = await Promise.all(
+        folderNames.map(async (name, index) => ({
+          id: index,
+          name: name,
+          files: await Promise.all(
+            allCIDs[index]
+              .filter((cid) => cid !== "")
+              .map(async (cid, fileIndex) => {
+                try {
+                  const response = await axios.get(
+                    `http://localhost:4040/getfile?cid=${cid}`
+                  );
+                  return {
+                    cid,
+                    name: `${name} version ${fileIndex + 1}`,
+                  };
+                } catch (error) {
+                  console.error("Error fetching file info:", error);
+                  return { cid, name: `File from CID: ${cid}` };
+                }
+              })
+          ),
+        }))
+      );
+
+      setProjects(loadedProjects);
+    } catch (error) {
+      console.error("Error loading projects from blockchain:", error);
+      toast.error("Failed to load projects from blockchain.");
+    } finally {
+      setLoading(false);
+    }
+  }, [address, setProjects]);
+
+  useEffect(() => {
+    loadProjectsFromBlockchain();
+  }, [loadProjectsFromBlockchain]);
 
   const toggleUploadModal = () => {
     setIsUploadModalOpen(!isUploadModalOpen);
     setSelectedFiles([]);
-    setCustomFileNames([]); // Reset custom file names
     setMessage("");
   };
 
@@ -92,41 +91,23 @@ const ProfilePage = () => {
     setProjectName("");
   };
 
-// Close the modal when returning from SunSwap
-useEffect(() => {
-  const handleWindowFocus = () => {
-    if (isTransactionModalVisible) {
-      setIsTransactionModalVisible(false);
-    }
-  };
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      if (isTransactionModalVisible) {
+        setIsTransactionModalVisible(false);
+      }
+    };
 
-  window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("focus", handleWindowFocus);
 
-  return () => {
-    window.removeEventListener("focus", handleWindowFocus);
-  };
-}, [isTransactionModalVisible]);
-  
-  const openProjectDetailsModal = async (project) => {
+    return () => {
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [isTransactionModalVisible]);
+
+  const openProjectDetailsModal = (project) => {
     setCurrentProject(project);
     setIsProjectDetailsModalOpen(true);
-    // try {
-    // setLoading(true);
-    //     {loading && <span className="loading-spinner"></span>}
-    //   // Fetch the files for the project based on the project ID or any identifier
-    //   // const response = await axios.get(`http://localhost:4040/getFiles?projectId=${project.id}`);
-    //   // const fetchedFiles = response.data.files;
-
-    //   // Update the current project with fetched files
-    //   setCurrentProject((prevProject) => ({
-    //     ...prevProject,
-    //     files: fetchedFiles,
-    //   }));
-    // } catch (error) {
-    //   console.error('Error fetching files:', error);
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   const closeProjectDetailsModal = () => {
@@ -143,14 +124,195 @@ useEffect(() => {
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
     setSelectedFiles(files);
-    setCustomFileNames(Array(files.length).fill("")); // Initialize custom file names array
   };
 
-  const handleCustomNameChange = (index, value) => {
-    const updatedNames = [...customFileNames];
-    updatedNames[index] = value;
-    setCustomFileNames(updatedNames);
+  const handleCreateFolder = async () => {
+    if (projectName.trim() !== "") {
+      try {
+        const contract = await window.tronWeb.contract().at(contractAddress);
+        await contract.uploadFileToFolder(projectName, "").send({
+          feeLimit: 100000000,
+          callValue: 0,
+        });
+
+        await loadProjectsFromBlockchain();
+        toast.success("Project folder created successfully!");
+        toggleCreateFolderModal();
+      } catch (error) {
+        console.error("Error creating folder:", error);
+        toast.error("Failed to create project folder.");
+      }
+    } else {
+      toast.error("Please enter a project name.");
+    }
   };
+
+  const handleFileUpload = async () => {
+    if (selectedFiles.length > 0 && currentProject) {
+      setIsUploading(true);
+
+      try {
+        const responses = await Promise.all(
+          selectedFiles.map((file) => {
+            const formData = new FormData();
+            formData.append("files", file);
+            return axios.post("http://localhost:4040/upload", formData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+          })
+        );
+
+        const contract = await window.tronWeb.contract().at(contractAddress);
+
+        for (const response of responses) {
+          await contract
+            .uploadFileToFolder(currentProject.name, response.data.cid)
+            .send({
+              feeLimit: 100000000,
+              callValue: window.tronWeb.toSun(20),
+            });
+        }
+        setTransactionSuccess(true);
+        setIsTransactionModalVisible(true);
+
+        const newFiles = responses.map((response, index) => ({
+          cid: response.data.cid,
+          name: `${currentProject.name} version ${
+            currentProject.files.length + index + 1
+          }`,
+        }));
+
+        setCurrentProject((prev) => ({
+          ...prev,
+          files: [...prev.files, ...newFiles],
+        }));
+
+        setProjects((prevProjects) =>
+          prevProjects.map((project) =>
+            project.name === currentProject.name
+              ? { ...project, files: [...project.files, ...newFiles] }
+              : project
+          )
+        );
+
+        setMessage("Files uploaded successfully!");
+        toast.success("Files uploaded successfully!");
+        setSelectedFiles([]);
+      } catch (error) {
+        setTransactionSuccess(false);
+        setIsTransactionModalVisible(true);
+        console.error("Error uploading files:", error);
+        setMessage("Error uploading files.");
+        toast.error("Failed to upload files.");
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      setMessage("Please select files and choose a project to upload to.");
+      toast.error("Please select files and choose a project to upload to.");
+    }
+  };
+
+  const handleFileClick = async (cid, fileName) => {
+    try {
+      const response = await axios({
+        url: `http://localhost:4040/getfile?cid=${cid}`,
+        method: "GET",
+        responseType: "blob",
+      });
+
+      const fileType = response.headers["content-type"];
+      const blob = new Blob([response.data], { type: fileType });
+      const fileURL = window.URL.createObjectURL(blob);
+
+      if (fileType.startsWith("image/") || fileType === "application/pdf") {
+        window.open(fileURL, "_blank");
+      } else {
+        const a = document.createElement("a");
+        a.href = fileURL;
+        a.download = fileName;
+        a.click();
+      }
+    } catch (error) {
+      console.error("Error fetching file:", error);
+      toast.error("Failed to fetch file.");
+    }
+  };
+
+  const handleDeleteProject = async (name) => {
+    try {
+      const contract = await window.tronWeb.contract().at(contractAddress);
+      await contract.deleteParticularFolder(name).send({
+        feeLimit: 100000000,
+        callValue: 0,
+      });
+
+      setProjects((prevProjects) =>
+        prevProjects.filter((project) => project.name !== name)
+      );
+      toast.success("Project deleted successfully!");
+
+      if (currentProject && currentProject.name === name) {
+        setIsProjectDetailsModalOpen(false);
+        setCurrentProject(null);
+      }
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      toast.error("Failed to delete project.");
+    }
+  };
+
+  const handleDeleteFile = async (projectName, fileIndex) => {
+    try {
+      const contract = await window.tronWeb.contract().at(contractAddress);
+      await contract.deleteParticularFile(projectName, fileIndex).send({
+        feeLimit: 100000000,
+        callValue: 0,
+      });
+
+      setProjects((prevProjects) =>
+        prevProjects.map((project) => {
+          if (project.name === projectName) {
+            const updatedFiles = project.files.filter(
+              (_, index) => index !== fileIndex
+            );
+            return { ...project, files: updatedFiles };
+          }
+          return project;
+        })
+      );
+
+      if (currentProject && currentProject.name === projectName) {
+        setCurrentProject((prev) => ({
+          ...prev,
+          files: prev.files.filter((_, index) => index !== fileIndex),
+        }));
+      }
+
+      toast.success("File deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast.error("Failed to delete file.");
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    setSelectedFiles(files);
+  };
+
+  console.log(currentProject);
   const checkBalance = async () => {
     if (!address) {
       setMessage("Please connect your wallet first.");
@@ -174,211 +336,15 @@ useEffect(() => {
       setMessage("Error checking balance");
     }
   };
-  const triggerTransaction = async (latest2cid) => {
-    if (!connected) {
-      setMessage("Please connect your wallet first.");
-      return;
-    }
 
-    try {
-      const contractAddress = "TGXJVSgz4KyAKKQeZ1Gy2EmMYSueKWLGYp";
-      const contract = await window.tronWeb.contract().at(contractAddress);
-
-      // Sending 20 TRX to the contract for the operation
-      const trxAmount = 20; // Amount the user is paying
-      const callValue = window.tronWeb.toSun(20); // Convert to Sun (smallest unit of TRX)
-
-      const transaction = await contract.uploadfile(latest2cid).send({
-        feeLimit: 100000000,
-        callValue: callValue,
-      });
-
-      // If transaction succeeds, show success modal
-      setTransactionSuccess(true);
-      setIsTransactionModalVisible(true); // Open the modal
-      console.log("https://nile.tronscan.org/#/transaction/" + transaction);
-
-      const excessAmount = window.tronWeb.toSun(trxAmount) - callValue;
-
-      if (excessAmount > 0) {
-        await axios.post("http://localhost:4040/sendExcessTrx", {
-          fromAddress: address,
-          amount: excessAmount,
-        });
-      }
-
-      setMessage("Transaction successful");
-      return true;
-    } catch (error) {
-      console.error("Error triggering transaction:", error);
-
-      // If transaction fails, show failure modal
-      setTransactionSuccess(false);
-      setIsTransactionModalVisible(true); // Open the modal
-      setMessage("Transaction failed");
-      return false;
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (selectedFiles.length > 0 && currentProject) {
-      setIsUploading(true);
-      const formData = new FormData();
-      selectedFiles.forEach((file) => formData.append("files", file));
-
-      try {
-        const responses = await Promise.all(
-          selectedFiles.map((file) =>
-            axios.post("http://localhost:4040/upload", formData, {
-              headers: { "Content-Type": "multipart/form-data" },
-            })
-          )
-        );
-
-        const latestCid = responses[responses.length - 1].data.cid;
-        console.log("latestCid:", latestCid);
-
-        // Trigger the transaction
-        const transactionSuccessful = await triggerTransaction(latestCid);
-
-        if (transactionSuccessful) {
-          // Map the responses to include custom file names and CID
-          const uploadedFilesWithCIDs = responses.map((response, index) => ({
-            name: customFileNames[index] || response.data.originalFilename,
-            cid: response.data.cid,
-          }));
-
-          const updatedProject = {
-            ...currentProject,
-            files: [...currentProject.files, ...uploadedFilesWithCIDs],
-          };
-
-          setProjects((prevProjects) =>
-            prevProjects.map((project) =>
-              project.id === currentProject.id ? updatedProject : project
-            )
-          );
-          setCurrentProject(updatedProject);
-
-          // Set the modal to show success
-          setTransactionSuccess(true);
-        } else {
-          // Set the modal to show failure
-          setTransactionSuccess(false);
-        }
-
-        // Show the transaction modal
-        setIsTransactionModalVisible(true);
-      } catch (error) {
-        setMessage("Error uploading files.");
-        console.error("File upload error:", error);
-      } finally {
-        setIsUploading(false);
-      }
-    } else {
-      setMessage("Please select files and choose a project to upload to.");
-    }
-  };
-
-  const handleCreateFolder = () => {
-    if (projectName.trim() !== "") {
-      const newProject = {
-        id: Date.now(),
-        name: projectName,
-        files: [],
-      };
-
-      setProjects((prevProjects) => [...prevProjects, newProject]);
-      setProjectName("");
-      toast.success("Project folder created successfully!");
-      toggleCreateFolderModal();
-    } else {
-      toast.error("Please enter a project name.");
-    }
-  };
-
-  const handleFileClick = async (cid, fileName) => {
-    try {
-      const response = await axios({
-        url: `http://localhost:4040/getfile?cid=${cid}`,
-        method: "GET",
-        responseType: "blob",
-      });
-
-      const fileType = response.headers["content-type"];
-      const blob = new Blob([response.data], { type: fileType });
-      const fileURL = window.URL.createObjectURL(blob);
-
-      if (fileType.startsWith("image/") || fileType === "application/pdf") {
-        window.open(fileURL, "_blank");
-      } else {
-        const a = document.createElement("a");
-        a.href = fileURL;
-        a.download = fileName; // Use the fileName from the clicked file
-        a.click();
-      }
-    } catch (error) {
-      console.error("Error fetching file:", error);
-    }
-  };
-
-  const handleDeleteProject = (id) => {
-    const updatedProjects = projects.filter((project) => project.id !== id);
-    setProjects(updatedProjects);
-    toast.success("Project deleted successfully!");
-  };
-
-  const handleDeleteFile = (fileIndex) => {
-    if (currentProject) {
-      const updatedFiles = currentProject.files.filter(
-        (_, index) => index !== fileIndex
-      );
-      const updatedProject = {
-        ...currentProject,
-        files: updatedFiles,
-      };
-
-      // Update the current project and the projects state
-      setCurrentProject(updatedProject);
-      setProjects((prevProjects) =>
-        prevProjects.map((project) =>
-          project.id === currentProject.id ? updatedProject : project
-        )
-      );
-
-      toast.success("File deleted successfully!");
-    }
-  };
-
-  // Drag and drop handlers
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-    setCustomFileNames((prevNames) => [
-      ...prevNames,
-      ...Array(files.length).fill(""),
-    ]); // Update custom names
-  };
-
+  // console.log("https://nile.tronscan.org/#/transaction/" + transaction); addddd this wgere ever neccesasary
   return (
     <div className="profile-page">
       <div className="navigation-bar">
         <div className="navigation-bar-content">
-        <div className="icon">
-  <img src={logo} alt="Logo" className="logo-image" />
-</div>
-
+          <div className="icon">
+            <img src={logo} alt="Logo" className="logo-image" />
+          </div>
           <div className="button-group2">
             <button className="home-page-btn" onClick={() => navigate("/")}>
               Home Page
@@ -404,8 +370,12 @@ useEffect(() => {
         </div>
 
         <div className="files-display">
-          {projects.length === 0 ? (
-            <div className="no-files">No files to display</div>
+          {loading ? (
+            <div className="loading-spinner">
+              <div className="spinner"></div>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="no-files">No projects to display</div>
           ) : (
             searchProjects(projects).map((project) => (
               <div
@@ -418,7 +388,7 @@ useEffect(() => {
                   className="delete-btn"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleDeleteProject(project.id);
+                    handleDeleteProject(project.name);
                   }}
                 >
                   <span className="delete-text">&#10005;</span>
@@ -430,7 +400,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Modal for Project Details */}
       {isProjectDetailsModalOpen && currentProject && (
         <div className="modal-overlay">
           <div className="modal-content1">
@@ -444,12 +413,11 @@ useEffect(() => {
                   >
                     {file.name}
                   </span>
-                  {/* Add delete button */}
                   <span
                     className="delete-text"
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering file click event
-                      handleDeleteFile(index); // Call the file deletion handler
+                      e.stopPropagation();
+                      handleDeleteFile(currentProject.name, index);
                     }}
                   >
                     &#10005;
@@ -471,7 +439,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Modal for Upload */}
       {isUploadModalOpen && (
         <div className="modal-overlay">
           <div
@@ -506,15 +473,6 @@ useEffect(() => {
                   {Array.from(selectedFiles).map((file, index) => (
                     <li className="file-uploaded-name" key={index}>
                       {file.name}
-                      <input
-                        type="text"
-                        placeholder="Enter file name"
-                        value={customFileNames[index]}
-                        onChange={(e) =>
-                          handleCustomNameChange(index, e.target.value)
-                        }
-                        className="file-upload-name"
-                      />
                     </li>
                   ))}
                 </ul>
@@ -532,14 +490,11 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Include the modal */}
       <TransactionModal
         isVisible={isTransactionModalVisible}
         isSuccess={transactionSuccess}
         onClose={() => setIsTransactionModalVisible(false)}
       />
-
-      {/* Modal for Create Folder */}
       {isCreateFolderModalOpen && (
         <div className="modal-overlay">
           <div className="modal-content1">
